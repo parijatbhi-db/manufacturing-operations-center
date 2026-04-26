@@ -1,0 +1,10 @@
+node_modules/
+client/node_modules/
+# NOTE: client/dist is intentionally NOT ignored — it's deployed to Databricks
+.env
+.env.local
+.DS_Store
+.vscode/
+.idea/
+*.log
+.databricks/
