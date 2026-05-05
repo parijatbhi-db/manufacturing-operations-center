@@ -12,7 +12,10 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const DASHBOARD_ID = process.env.DASHBOARD_ID || '01f13ffb2116152b9c57017ac6989369';
 const GENIE_SPACE_ID = process.env.GENIE_SPACE_ID || '01f1403396011f339af2cb207b69e9b6';
-const AGENT_SERVING_ENDPOINT = process.env.AGENT_SERVING_ENDPOINT || 'mas-abac7793-endpoint';
+const AGENT_SERVING_ENDPOINT = process.env.AGENT_SERVING_ENDPOINT || 'mas-40863b57-endpoint';
+const SUPERVISOR_AGENT_TILE_ID = process.env.SUPERVISOR_AGENT_TILE_ID || '40863b57-1699-430c-8335-ee6db4a0c691';
+const KNOWLEDGE_ASSISTANT_TILE_ID = process.env.KNOWLEDGE_ASSISTANT_TILE_ID || '5578ac04-9888-47c0-8b14-ba483a0e0259';
+const KNOWLEDGE_ASSISTANT_ENDPOINT = process.env.KNOWLEDGE_ASSISTANT_ENDPOINT || 'ka-5578ac04-endpoint';
 const WORKSPACE_ORG_ID = process.env.WORKSPACE_ORG_ID || '1444828305810485';
 
 // In Databricks Apps, DATABRICKS_HOST is hostname only (no scheme).
@@ -61,6 +64,13 @@ app.get('/api/config', (req, res) => {
     },
     agent: {
       endpoint: AGENT_SERVING_ENDPOINT,
+      tileId: SUPERVISOR_AGENT_TILE_ID,
+      workspaceUrl: `${getWorkspaceHost()}/ml/bricks/sa/configure/${SUPERVISOR_AGENT_TILE_ID}?o=${WORKSPACE_ORG_ID}`,
+    },
+    knowledgeAssistant: {
+      tileId: KNOWLEDGE_ASSISTANT_TILE_ID,
+      endpoint: KNOWLEDGE_ASSISTANT_ENDPOINT,
+      workspaceUrl: `${getWorkspaceHost()}/ml/bricks/ka/configure/${KNOWLEDGE_ASSISTANT_TILE_ID}?o=${WORKSPACE_ORG_ID}`,
     },
     workspace: {
       host: getWorkspaceHost(),

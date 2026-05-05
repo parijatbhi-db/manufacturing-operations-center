@@ -1,74 +1,76 @@
 # Manufacturing Operations Center
 
-A Databricks App that surfaces three workspace assets through a single UI for manufacturing operations teams.
+Combined repo for the **Manufacturing Operations Center** demo: a Databricks App that surfaces a Lakeview dashboard, a Genie space, and a Multi-Agent Supervisor for KARI Semiconductor STDF test quality.
 
-**Deployed:** https://mfg-ops-center-1444828305810485.aws.databricksapps.com
-**Workspace:** `e2-demo-field-eng.cloud.databricks.com`
+**Live app:** https://mfg-ops-center-1444828305810485.aws.databricksapps.com
+**Workspace:** `e2-demo-field-eng.cloud.databricks.com` (org `1444828305810485`)
 
-## What it does
-
-Three tabs, one app:
-
-| Tab | Asset | How it's wired |
-|---|---|---|
-| Dashboard | Lakeview dashboard `01f13ffb...` (Semiconductor Test Quality and Throughput) | Iframe to `/embed/dashboardsv3/<id>` |
-| Genie | Genie space `01f14033...` (STDF Semiconductor Test Quality Analytics) | Chat UI → backend proxies to `/api/2.0/genie/spaces/<id>` using OBO token |
-| Supervisor Agent | Mosaic AI agent serving endpoint `mas-abac7793-endpoint` | Chat UI → backend proxies to `/serving-endpoints/<name>/invocations` using OBO token |
-
-User identity is read from the `X-Forwarded-Email` / `X-Forwarded-Preferred-Username` headers injected by the Databricks Apps proxy. Workspace API calls use the `X-Forwarded-Access-Token` header for on-behalf-of auth.
-
-## Stack
-
-- **Frontend:** React + Vite + TypeScript
-- **Backend:** Node.js + Express
-- **Deploy target:** Databricks Apps (Node.js runtime)
-
-## Layout
+## Repo layout
 
 ```
 .
-├── app.yaml              # Databricks App config: command, resources, scopes
-├── package.json          # Root deps (express, node-fetch); build script chains into client/
-├── server/
-│   └── index.js          # Express app: serves client/dist + proxies /api/genie + /api/agent
-└── client/
-    ├── vite.config.ts
-    ├── tsconfig.json
-    ├── index.html
-    └── src/
-        ├── App.tsx
-        ├── main.tsx
-        ├── styles.css
-        ├── lib/api.ts
-        └── components/
-            ├── DashboardView.tsx
-            ├── GenieView.tsx
-            ├── AgentView.tsx
-            └── Icons.tsx
+├── app/        # Databricks App (React + Vite + Node.js/Express)
+└── bundle/     # Databricks Asset Bundle - data generation, transformations,
+                #   dashboard, and Agent Bricks (KA + MAS) deploy
 ```
 
-## Deploy
+## What the demo does
 
-The Databricks Apps platform installs deps and builds the frontend server-side, so no local `npm install` is required.
+CPO at KARI Semiconductor Ops needs to ingest STDF wafer-sort/final-test files, standardize them into analytics-ready schemas, and monitor yield, bin distributions, and tester utilization. The bundle lays down the data, dashboard, and agent infrastructure; the app gives Operations a single pane to query it.
+
+| Surface | Asset | id |
+|---|---|---|
+| Dashboard | Semiconductor Test Quality and Throughput | `01f13ffb2116152b9c57017ac6989369` |
+| Genie space | STDF Semiconductor Test Quality Analytics | `01f1403396011f339af2cb207b69e9b6` |
+| Knowledge Assistant | STDF-Test-Quality-KA | tile `5578ac04-9888-47c0-8b14-ba483a0e0259`, endpoint `ka-5578ac04-endpoint` |
+| Multi-Agent Supervisor | Manufacturing-Operations-Supervisor | tile `40863b57-1699-430c-8335-ee6db4a0c691`, endpoint `mas-40863b57-endpoint` |
+
+The MAS routes between the KA (definitions, change-log context) and the Genie space (live SQL on STDF gold tables).
+
+## Deploy from scratch
+
+### 1. Bundle — data, dashboard, agents
 
 ```bash
+cd bundle
+databricks bundle validate -p DEFAULT
+databricks bundle deploy --force-lock -p DEFAULT
+databricks bundle run demo_workflow -p DEFAULT
+```
+
+This will:
+1. Create the `parijat_demos.manufacturing` schema + `raw_data` volume in Unity Catalog
+2. Generate synthetic STDF data via Faker
+3. Run bronze → silver → gold transformations (`transformations.sql`)
+4. Deploy the Lakeview dashboard
+5. (If `bricks_conf.json` includes `knowledge_assistant` / `multi_agent_supervisor` blocks) deploy the agents via `deploy_resources.py`
+
+The `redeploy_agents.py` script is a standalone fallback to redeploy just the KA + MAS without re-running the data pipeline. Submit it as a one-off Databricks job task with `databricks-sdk>=0.106.0` in the env spec.
+
+### 2. App
+
+```bash
+cd app
+# Frontend builds server-side on Databricks Apps; no local npm install needed.
 databricks sync . /Workspace/Users/<you>/manufacturing-operations-center -p DEFAULT \
   --exclude node_modules --exclude client/node_modules --exclude client/dist --exclude .git
-
 databricks apps deploy mfg-ops-center \
   --source-code-path /Workspace/Users/<you>/manufacturing-operations-center -p DEFAULT
 ```
 
-## Configuration
+App runs Express + React/Vite. On first visit, Databricks shows a one-time OAuth consent for the Genie + serving-endpoint scopes. After that, all three tabs work.
 
-`app.yaml` declares the resources and OAuth user-scopes:
+## App configuration
 
-- Resource `genie-space` → space `01f14033...`, `CAN_RUN`
-- Resource `serving-endpoint` → `mas-abac7793-endpoint`, `CAN_QUERY`
-- User-API scopes: `dashboards.genie`, `serving.serving-endpoints`
+`app/app.yaml` declares two resources:
+- `genie-space` → CAN_RUN on the Genie space
+- `serving-endpoint` → CAN_QUERY on `mas-40863b57-endpoint` (the MAS)
 
-The dashboard ID is passed via env var (Databricks Apps doesn't have a `dashboard` resource type — viewers need `CAN_READ` on the dashboard directly).
+Plus env-var defaults that let the React UI render workspace links to the Knowledge Assistant and Supervisor configure pages.
 
-## First-run
+The dashboard is referenced via env var (Databricks Apps doesn't have a `dashboard` resource type — viewers need CAN_READ on the dashboard directly).
 
-On first visit Databricks prompts for one-time OAuth consent for the Genie + serving-endpoint scopes. After that, all three tabs work with no further setup.
+## See also
+
+- `app/README.md` — App-only details (server routes, build pipeline, troubleshooting)
+- `bundle/README.md` — Bundle origin (AI Demo Generator), schema, agent brick details

@@ -9,6 +9,12 @@ env:
     valueFrom: 'genie-space'
   - name: 'AGENT_SERVING_ENDPOINT'
     valueFrom: 'serving-endpoint'
+  - name: 'SUPERVISOR_AGENT_TILE_ID'
+    value: '40863b57-1699-430c-8335-ee6db4a0c691'
+  - name: 'KNOWLEDGE_ASSISTANT_TILE_ID'
+    value: '5578ac04-9888-47c0-8b14-ba483a0e0259'
+  - name: 'KNOWLEDGE_ASSISTANT_ENDPOINT'
+    value: 'ka-5578ac04-endpoint'
   - name: 'WORKSPACE_ORG_ID'
     value: '1444828305810485'
 
@@ -27,7 +33,7 @@ env:
 #
 # Resource: Model Serving Endpoint (supervisor agent)
 #   key: serving-endpoint
-#   name: mas-abac7793-endpoint
+#   name: mas-40863b57-endpoint
 #   permission: CAN_QUERY
 #
 # User authorization scopes required (set in app definition or UI):

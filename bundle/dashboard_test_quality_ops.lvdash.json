@@ -1,0 +1,1183 @@
+{
+  "datasets": [
+    {
+      "name": "ds_counter_total_dies_30d",
+      "displayName": "Counter: Total Dies Tested (Last 30d)",
+      "queryLines": [
+        "SELECT total_dies_30d FROM parijat_demos.manufacturing.gold_counter_total_dies_30d "
+      ]
+    },
+    {
+      "name": "ds_counter_avg_fpy_14d",
+      "displayName": "Counter: Avg FPY (Last 14d)",
+      "queryLines": [
+        "SELECT avg_fpy_14d FROM parijat_demos.manufacturing.gold_counter_avg_fpy_14d "
+      ]
+    },
+    {
+      "name": "ds_counter_avg_retest_14d",
+      "displayName": "Counter: Avg Retest Rate (Last 14d)",
+      "queryLines": [
+        "SELECT avg_retest_rate_14d FROM parijat_demos.manufacturing.gold_counter_avg_retest_14d "
+      ]
+    },
+    {
+      "name": "ds_counter_avg_uph_7d",
+      "displayName": "Counter: Avg UPH (Trailing 7d)",
+      "queryLines": [
+        "SELECT avg_uph_7d FROM parijat_demos.manufacturing.gold_counter_avg_uph_7d "
+      ]
+    },
+    {
+      "name": "ds_test_kpis_daily",
+      "displayName": "Daily Test KPIs",
+      "queryLines": [
+        "SELECT date, site, product, foundry, dies_tested, dies_pass_fp, dies_fail, fpy, retest_rate, fpy_baseline_21d FROM parijat_demos.manufacturing.gold_test_kpis_daily ORDER BY date, site, product "
+      ]
+    },
+    {
+      "name": "ds_bin_mix_weekly",
+      "displayName": "Weekly Failure Bin Mix",
+      "queryLines": [
+        "SELECT week_start, site, product, hard_bin AS hard_bin_code, CASE WHEN hard_bin IN ('HB_014','HB_021','HB_007','HB_032') THEN hard_bin ELSE 'Other' END AS hard_bin_group, die_count FROM parijat_demos.manufacturing.gold_bin_mix_weekly ORDER BY week_start, site, hard_bin_group "
+      ]
+    },
+    {
+      "name": "ds_param_drift_timeseries",
+      "displayName": "Parameter Drift Timeseries",
+      "queryLines": [
+        "SELECT date, site, product, param_code, mean_z, pct_limit_breach FROM parijat_demos.manufacturing.gold_param_drift_timeseries ORDER BY date, site, param_code "
+      ]
+    },
+    {
+      "name": "ds_change_log",
+      "displayName": "Equipment and Recipe Change Log",
+      "queryLines": [
+        "SELECT change_time, date, week_start, site, tester_id, change_type, scope, ecr_id, details FROM parijat_demos.manufacturing.gold_change_log ORDER BY change_time DESC "
+      ]
+    },
+    {
+      "name": "ds_impact_cumulative",
+      "displayName": "Cumulative Impact (Lost Dies and Cost)",
+      "queryLines": [
+        "SELECT date, site, cumulative_lost_dies, cumulative_cost_usd FROM parijat_demos.manufacturing.gold_impact_cumulative ORDER BY date, site "
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "global_filters",
+      "displayName": "Global Filters",
+      "layout": [
+        {
+          "widget": {
+            "name": "filter_date_range",
+            "queries": [
+              {
+                "name": "ds_test_kpis_daily_date",
+                "query": {
+                  "datasetName": "ds_test_kpis_daily",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_bin_mix_weekly_week_start",
+                "query": {
+                  "datasetName": "ds_bin_mix_weekly",
+                  "fields": [
+                    {
+                      "name": "week_start",
+                      "expression": "`week_start`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_param_drift_timeseries_date",
+                "query": {
+                  "datasetName": "ds_param_drift_timeseries",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_change_log_date",
+                "query": {
+                  "datasetName": "ds_change_log",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_impact_cumulative_date",
+                "query": {
+                  "datasetName": "ds_impact_cumulative",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-date-range-picker",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "date",
+                    "displayName": "Date",
+                    "queryName": "ds_test_kpis_daily_date"
+                  },
+                  {
+                    "fieldName": "week_start",
+                    "displayName": "Week Start",
+                    "queryName": "ds_bin_mix_weekly_week_start"
+                  },
+                  {
+                    "fieldName": "date",
+                    "displayName": "Date",
+                    "queryName": "ds_param_drift_timeseries_date"
+                  },
+                  {
+                    "fieldName": "date",
+                    "displayName": "Date",
+                    "queryName": "ds_change_log_date"
+                  },
+                  {
+                    "fieldName": "date",
+                    "displayName": "Date",
+                    "queryName": "ds_impact_cumulative_date"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by Date Range"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_site",
+            "queries": [
+              {
+                "name": "ds_test_kpis_daily_site",
+                "query": {
+                  "datasetName": "ds_test_kpis_daily",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_bin_mix_weekly_site",
+                "query": {
+                  "datasetName": "ds_bin_mix_weekly",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_param_drift_timeseries_site",
+                "query": {
+                  "datasetName": "ds_param_drift_timeseries",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_change_log_site",
+                "query": {
+                  "datasetName": "ds_change_log",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_impact_cumulative_site",
+                "query": {
+                  "datasetName": "ds_impact_cumulative",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "ds_test_kpis_daily_site",
+                    "dataType": "STRING"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "ds_bin_mix_weekly_site",
+                    "dataType": "STRING"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "ds_param_drift_timeseries_site",
+                    "dataType": "STRING"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "ds_change_log_site",
+                    "dataType": "STRING"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "ds_impact_cumulative_site",
+                    "dataType": "STRING"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by Site"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_product",
+            "queries": [
+              {
+                "name": "ds_test_kpis_daily_product",
+                "query": {
+                  "datasetName": "ds_test_kpis_daily",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_bin_mix_weekly_product",
+                "query": {
+                  "datasetName": "ds_bin_mix_weekly",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_param_drift_timeseries_product",
+                "query": {
+                  "datasetName": "ds_param_drift_timeseries",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product",
+                    "queryName": "ds_test_kpis_daily_product",
+                    "dataType": "STRING"
+                  },
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product",
+                    "queryName": "ds_bin_mix_weekly_product",
+                    "dataType": "STRING"
+                  },
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product",
+                    "queryName": "ds_param_drift_timeseries_product",
+                    "dataType": "STRING"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by Product"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_foundry",
+            "queries": [
+              {
+                "name": "ds_test_kpis_daily_foundry",
+                "query": {
+                  "datasetName": "ds_test_kpis_daily",
+                  "fields": [
+                    {
+                      "name": "foundry",
+                      "expression": "`foundry`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "foundry",
+                    "displayName": "Foundry",
+                    "queryName": "ds_test_kpis_daily_foundry",
+                    "dataType": "STRING"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by Foundry"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 6,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_tester_id",
+            "queries": [
+              {
+                "name": "ds_change_log_tester_id",
+                "query": {
+                  "datasetName": "ds_change_log",
+                  "fields": [
+                    {
+                      "name": "tester_id",
+                      "expression": "`tester_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "tester_id",
+                    "displayName": "Tester ID",
+                    "queryName": "ds_change_log_tester_id",
+                    "dataType": "STRING"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by Tester ID"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 8,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_wafer_id",
+            "queries": [
+              {
+                "name": "ds_param_drift_timeseries_wafer_id",
+                "query": {
+                  "datasetName": "ds_param_drift_timeseries",
+                  "fields": [
+                    {
+                      "name": "wafer_id",
+                      "expression": "`wafer_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "wafer_id",
+                    "displayName": "Wafer ID",
+                    "queryName": "ds_param_drift_timeseries_wafer_id",
+                    "dataType": "STRING"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filter by Wafer ID"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 2,
+            "height": 2
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
+    },
+    {
+      "name": "test_quality_ops",
+      "displayName": "Semiconductor Test Quality and Throughput",
+      "layout": [
+        {
+          "widget": {
+            "name": "header_story",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Semiconductor Test Quality and Throughput\n",
+                "Executive monitoring of FPY, bin and parameter shifts, site-equipment isolation, change log alignment, and business impact in die loss and throughput.\n",
+                "The MX-7 AUS anomaly (2025-08-18..2025-08-27) should stand out while keeping full-run context.\n"
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_total_dies_30d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_counter_total_dies_30d",
+                  "fields": [
+                    {
+                      "name": "sum(total_dies_30d)",
+                      "expression": "SUM(`total_dies_30d`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_dies_30d)",
+                  "displayName": "Total Dies (30d)",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Total Dies Tested (Last 30d)",
+                "showTitle": true,
+                "description": "Total die count tested over trailing 30 days across all sites/products; context for scale.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_avg_fpy_14d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_counter_avg_fpy_14d",
+                  "fields": [
+                    {
+                      "name": "avg(avg_fpy_14d)",
+                      "expression": "AVG(`avg_fpy_14d`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(avg_fpy_14d)",
+                  "displayName": "Avg FPY (14d)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Avg FPY (Last 14d)",
+                "showTitle": true,
+                "description": "Average first-pass yield over the last 14 days across filters.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_retest_rate_14d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_counter_avg_retest_14d",
+                  "fields": [
+                    {
+                      "name": "avg(avg_retest_rate_14d)",
+                      "expression": "AVG(`avg_retest_rate_14d`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(avg_retest_rate_14d)",
+                  "displayName": "Retest Rate (14d)",
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "Retest Rate (Last 14d)",
+                "showTitle": true,
+                "description": "Average retest rate over the last 14 days.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_uph_7d",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_counter_avg_uph_7d",
+                  "fields": [
+                    {
+                      "name": "avg(avg_uph_7d)",
+                      "expression": "AVG(`avg_uph_7d`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(avg_uph_7d)",
+                  "displayName": "UPH (Trailing 7d)",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "title": "UPH at Wafer Sort (Trailing 7d)",
+                "showTitle": true,
+                "description": "Average units-per-hour for wafer sort testers. Highlights dip during AUS incident.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "line_fpy_by_date_daily",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_test_kpis_daily",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    },
+                    {
+                      "name": "avg(fpy)",
+                      "expression": "AVG(`fpy`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Date"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "avg(fpy)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-percent",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  },
+                  "axis": {
+                    "title": "FPY (%)"
+                  },
+                  "displayName": "FPY (%)"
+                },
+                "color": {
+                  "fieldName": "site",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Site"
+                }
+              },
+              "frame": {
+                "title": "FPY by Date (Daily)",
+                "showTitle": true,
+                "description": "X: date (daily); Y: FPY (%). Lines by site (AUS, HSC, PNG). Expect visible dip for AUS starting 2025-08-18 on MX-7 filter; HSC stays stable.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_failure_bin_mix_weekly_grouped",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_bin_mix_weekly",
+                  "fields": [
+                    {
+                      "name": "week_start",
+                      "expression": "`week_start`"
+                    },
+                    {
+                      "name": "hard_bin_group",
+                      "expression": "`hard_bin_group`"
+                    },
+                    {
+                      "name": "sum(die_count)",
+                      "expression": "SUM(`die_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "weekly(week_start)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Week Start"
+                  },
+                  "displayName": "Week Start"
+                },
+                "y": {
+                  "fieldName": "sum(die_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Failure Die Count"
+                  },
+                  "displayName": "Failure Die Count"
+                },
+                "color": {
+                  "fieldName": "hard_bin_group",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Hard Bin"
+                }
+              },
+              "mark": {
+                "layout": "group"
+              },
+              "frame": {
+                "title": "Failure Bin Mix (Grouped by Week)",
+                "showTitle": true,
+                "description": "X: week_start; Y: die_count in failure hard bins; grouped bars by hard_bin_code (top 5, others collapsed). Shows HB_021 surge during incident.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 5,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "line_top_drifting_params_daily",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_param_drift_timeseries",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "param_code",
+                      "expression": "`param_code`"
+                    },
+                    {
+                      "name": "avg(mean_z)",
+                      "expression": "AVG(`mean_z`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Date"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "avg(mean_z)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Mean Z-score vs Baseline"
+                  },
+                  "displayName": "Mean Z-score"
+                },
+                "color": {
+                  "fieldName": "param_code",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Parameter Code"
+                }
+              },
+              "frame": {
+                "title": "Top Drifting Parameters (Daily)",
+                "showTitle": true,
+                "description": "X: date (daily); Y: zscore vs pre-event baseline for parameter means. Lines: PT_0210, PT_0217, PT_0103. Expect PT_0210 spike at AUS.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 10,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_cumulative_die_loss_and_cost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_impact_cumulative",
+                  "fields": [
+                    {
+                      "name": "date",
+                      "expression": "`date`"
+                    },
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    },
+                    {
+                      "name": "sum(cumulative_lost_dies)",
+                      "expression": "SUM(`cumulative_lost_dies`)"
+                    },
+                    {
+                      "name": "sum(cumulative_cost_usd)",
+                      "expression": "SUM(`cumulative_cost_usd`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(date)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "axis": {
+                    "title": "Date"
+                  },
+                  "displayName": "Date"
+                },
+                "y": {
+                  "fieldName": "sum(cumulative_lost_dies)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "axis": {
+                    "title": "Cumulative Lost Dies"
+                  },
+                  "displayName": "Cumulative Lost Dies"
+                },
+                "y2": {
+                  "fieldName": "sum(cumulative_cost_usd)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 2
+                    }
+                  },
+                  "axis": {
+                    "title": "Cumulative Cost ($)"
+                  },
+                  "displayName": "Cumulative Cost ($)"
+                },
+                "color": {
+                  "fieldName": "site",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Site"
+                }
+              },
+              "frame": {
+                "title": "Cumulative Die Loss and Cost",
+                "showTitle": true,
+                "description": "X: date (daily); Y: cumulative lost_dies and cost_usd; stacked by site. Demonstrates business impact and recovery slope post-rollback.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 10,
+            "width": 3,
+            "height": 5
+          }
+        },
+        {
+          "widget": {
+            "name": "table_equipment_and_recipe_changes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_change_log",
+                  "fields": [
+                    {
+                      "name": "change_time",
+                      "expression": "`change_time`"
+                    },
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    },
+                    {
+                      "name": "tester_id",
+                      "expression": "`tester_id`"
+                    },
+                    {
+                      "name": "change_type",
+                      "expression": "`change_type`"
+                    },
+                    {
+                      "name": "scope",
+                      "expression": "`scope`"
+                    },
+                    {
+                      "name": "ecr_id",
+                      "expression": "`ecr_id`"
+                    },
+                    {
+                      "name": "details",
+                      "expression": "`details`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "change_time",
+                    "displayName": "Change Time",
+                    "type": "timestamp",
+                    "displayAs": "datetime",
+                    "dateTimeFormat": "yyyy-MM-dd HH:mm"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "type": "string",
+                    "displayAs": "string"
+                  },
+                  {
+                    "fieldName": "tester_id",
+                    "displayName": "Tester ID",
+                    "type": "string",
+                    "displayAs": "string"
+                  },
+                  {
+                    "fieldName": "change_type",
+                    "displayName": "Change Type",
+                    "type": "string",
+                    "displayAs": "string"
+                  },
+                  {
+                    "fieldName": "scope",
+                    "displayName": "Scope",
+                    "type": "string",
+                    "displayAs": "string"
+                  },
+                  {
+                    "fieldName": "ecr_id",
+                    "displayName": "ECR ID",
+                    "type": "string",
+                    "displayAs": "string"
+                  },
+                  {
+                    "fieldName": "details",
+                    "displayName": "Details",
+                    "type": "string",
+                    "displayAs": "string"
+                  }
+                ]
+              },
+              "frame": {
+                "title": "Equipment and Recipe Changes",
+                "showTitle": true,
+                "description": "Correlate HF-3.2.1 deployment and probe card rev C with onset, and rollback with recovery.",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 6,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    }
+  }
+}

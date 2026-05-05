@@ -4,7 +4,8 @@ export type AppConfig = {
   user: { name: string; email: string };
   dashboard: { id: string; embedUrl: string; publishedUrl: string };
   genie: { spaceId: string; url: string };
-  agent: { endpoint: string };
+  agent: { endpoint: string; tileId: string; workspaceUrl: string };
+  knowledgeAssistant: { tileId: string; endpoint: string; workspaceUrl: string };
   workspace: { host: string; orgId: string };
 };
 

@@ -1,0 +1,196 @@
+"""One-shot redeploy of KA + MAS for Manufacturing Operations Center demo.
+
+Reuses the existing AgentBricksManager from the semi_stdf bundle.
+Designed to run as a Databricks job task -- prints the final endpoint names
+to stdout for the caller to parse.
+"""
+
+import logging
+import os
+import sys
+import time
+
+# When run as a job task, agent_bricks_service.py lives next to this script.
+# In serverless, __file__ may not be defined (file is exec'd). Hardcode the
+# bundle directory and also include cwd as a fallback.
+sys.path.insert(0, os.getcwd())
+sys.path.insert(0, '/Workspace/Users/parijat.bhide@databricks.com/semi_stdf')
+
+from databricks.sdk import WorkspaceClient
+from agent_bricks_service import AgentBricksManager
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+logger = logging.getLogger(__name__)
+
+# ---- Configuration (from task brief) ----
+
+KA_DISPLAY_NAME = "STDF-Test-Quality-KA"
+KA_DESCRIPTION = (
+    "Answers questions about semiconductor STDF wafer-sort and final-test "
+    "quality, yield, bin distributions, parameter drift, and tester utilization "
+    "for KARI Semiconductor Ops."
+)
+KA_INSTRUCTIONS = (
+    "You are an assistant that answers questions about semiconductor "
+    "manufacturing test quality. Use the provided STDF data dictionary and "
+    "historical change-log/KPI documents to ground answers. When asked about "
+    "specific incidents, cite the relevant date range, site, and product."
+)
+KA_KNOWLEDGE_SOURCES = [{
+    "display_name": "STDF Reference Docs",
+    "description": "STDF data dictionary, gold table samples (KPIs, change log, param drift, business impact)",
+    "source_type": "files",
+    "files_path": "/Volumes/parijat_demos/manufacturing/raw_data/docs",
+}]
+
+MAS_NAME = "Manufacturing-Operations-Supervisor"
+MAS_DESCRIPTION = (
+    "Supervisor agent for KARI Semiconductor Operations. Routes between a "
+    "Genie space (live SQL on STDF gold tables) and a Knowledge Assistant "
+    "(documentation and incident context)."
+)
+MAS_INSTRUCTIONS = (
+    "Route quantitative questions about yield, throughput, and bin "
+    "distributions to the Genie agent. Route definitions, doc lookups, and "
+    "incident context questions to the Knowledge Assistant agent."
+)
+
+GENIE_SPACE_ID = "01f1403396011f339af2cb207b69e9b6"
+GENIE_AGENT_NAME = "Genie_Data_Explorer"
+GENIE_AGENT_DESCRIPTION = "Live SQL analytics on STDF semiconductor test data"
+KA_AGENT_NAME = "STDF_Knowledge_Assistant"
+KA_AGENT_DESCRIPTION = "Documentation, definitions, and incident context"
+
+KA_WAIT_SECONDS = 15 * 60  # 15-minute cap for KA to reach ACTIVE
+
+
+def get_ka_endpoint_name(mgr: AgentBricksManager, ka_id: str) -> str:
+    """Pull the serving endpoint name from a KA record."""
+    ka = mgr.ka_get(ka_id)
+    if not ka:
+        raise RuntimeError(f"KA {ka_id} not found while fetching endpoint name")
+    endpoint = ka.get('endpoint_name')
+    if not endpoint:
+        endpoint = (
+            ka.get('knowledge_assistant', {})
+              .get('tile', {})
+              .get('serving_endpoint_name')
+        )
+    if not endpoint:
+        raise RuntimeError(f"KA {ka_id} has no endpoint_name. Raw: {ka}")
+    return endpoint
+
+
+def wait_for_ka_active(mgr: AgentBricksManager, ka_id: str, timeout_s: int) -> str:
+    """Poll until KA state == 'ACTIVE' (or 'ONLINE' for older API). Returns final state."""
+    deadline = time.time() + timeout_s
+    last = None
+    while time.time() < deadline:
+        state = mgr.ka_get_endpoint_status(ka_id)
+        if state != last:
+            logger.info(f"KA {ka_id} state: {state}")
+            last = state
+        if state in ('ACTIVE', 'ONLINE', 'READY'):
+            return state
+        if state == 'FAILED':
+            raise RuntimeError(f"KA {ka_id} entered FAILED state")
+        time.sleep(15)
+    return last or 'UNKNOWN'
+
+
+def main():
+    w = WorkspaceClient()
+    mgr = AgentBricksManager(w)
+
+    # ---- Step 1: Create or reuse KA ----
+    logger.info(f"Looking up existing KA by display_name='{KA_DISPLAY_NAME}'...")
+    existing_ka = mgr.find_by_name(KA_DISPLAY_NAME)
+
+    if existing_ka:
+        ka_id = existing_ka.tile_id
+        logger.info(f"Reusing existing KA tile_id={ka_id}")
+    else:
+        logger.info("Creating new KA via ka_create_or_update...")
+        result = mgr.ka_create_or_update(
+            display_name=KA_DISPLAY_NAME,
+            description=KA_DESCRIPTION,
+            instructions=KA_INSTRUCTIONS,
+            knowledge_sources=KA_KNOWLEDGE_SOURCES,
+        )
+        ka_id = result.get('id') or result.get('knowledge_assistant', {}).get('tile', {}).get('tile_id')
+        if not ka_id:
+            raise RuntimeError(f"Could not extract KA id from create result: {result}")
+        logger.info(f"KA created with id={ka_id}")
+
+    # ---- Step 2: Wait for KA endpoint to be online ----
+    logger.info(f"Waiting up to {KA_WAIT_SECONDS}s for KA endpoint to become ACTIVE...")
+    final_state = wait_for_ka_active(mgr, ka_id, KA_WAIT_SECONDS)
+    ka_online = final_state in ('ACTIVE', 'ONLINE', 'READY')
+    logger.info(f"KA final state: {final_state} (online={ka_online})")
+
+    ka_endpoint = get_ka_endpoint_name(mgr, ka_id)
+    logger.info(f"KA endpoint name: {ka_endpoint}")
+
+    # ---- Step 3: Build MAS agents and create/update MAS ----
+    agents = [
+        {
+            "name": GENIE_AGENT_NAME,
+            "description": GENIE_AGENT_DESCRIPTION,
+            "agent_type": "genie-space",
+            "genie_space": {"id": GENIE_SPACE_ID},
+        },
+        {
+            "name": KA_AGENT_NAME,
+            "description": KA_AGENT_DESCRIPTION,
+            "agent_type": "serving-endpoint",
+            "serving_endpoint": {"name": ka_endpoint},
+        },
+    ]
+
+    logger.info(f"Looking up existing MAS by name='{MAS_NAME}'...")
+    existing_mas = mgr.mas_find_by_name(MAS_NAME)
+    if existing_mas:
+        mas_tile_id = existing_mas.tile_id
+        logger.info(f"Updating existing MAS tile_id={mas_tile_id}")
+        mgr.mas_update(
+            tile_id=mas_tile_id,
+            name=MAS_NAME,
+            description=MAS_DESCRIPTION,
+            instructions=MAS_INSTRUCTIONS,
+            agents=agents,
+        )
+    else:
+        logger.info("Creating new MAS via mas_create...")
+        result = mgr.mas_create(
+            name=MAS_NAME,
+            agents=agents,
+            description=MAS_DESCRIPTION,
+            instructions=MAS_INSTRUCTIONS,
+        )
+        mas_tile_id = (
+            result.get('multi_agent_supervisor', {}).get('tile', {}).get('tile_id')
+            or result.get('tile', {}).get('tile_id')
+            or result.get('tile_id')
+        )
+        if not mas_tile_id:
+            raise RuntimeError(f"Could not extract MAS tile_id from create result: {result}")
+        logger.info(f"MAS created with tile_id={mas_tile_id}")
+
+    # ---- Step 4: Compute MAS endpoint name and check status ----
+    mas_endpoint = f"mas-{mas_tile_id[:8]}-endpoint"
+    mas_state = mgr.mas_get_endpoint_status(mas_tile_id)
+    logger.info(f"MAS endpoint status: {mas_state}")
+
+    # Print machine-parseable summary at the very end
+    print("---REDEPLOY-SUMMARY-BEGIN---")
+    print(f"KA_TILE_ID={ka_id}")
+    print(f"KA_ENDPOINT_NAME={ka_endpoint}")
+    print(f"KA_STATE={final_state}")
+    print(f"MAS_TILE_ID={mas_tile_id}")
+    print(f"MAS_ENDPOINT_NAME={mas_endpoint}")
+    print(f"MAS_STATE={mas_state}")
+    print("---REDEPLOY-SUMMARY-END---")
+
+
+if __name__ == '__main__':
+    main()

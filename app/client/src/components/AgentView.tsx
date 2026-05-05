@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AppConfig, ChatMsg, agentChat } from '../lib/api';
-import { IconAgent, IconSend } from './Icons';
+import { IconAgent, IconExternal, IconSend } from './Icons';
 
 type DisplayMsg = ChatMsg & { id: string; status?: 'thinking' | 'done' | 'error' };
 
@@ -75,6 +75,14 @@ export default function AgentView({ config }: { config: AppConfig }) {
           <div className="view-subtitle">
             Multi-agent supervisor for manufacturing operations · endpoint <code>{config.agent.endpoint}</code>
           </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <a className="btn" href={config.knowledgeAssistant.workspaceUrl} target="_blank" rel="noreferrer">
+            Knowledge Assistant <IconExternal />
+          </a>
+          <a className="btn" href={config.agent.workspaceUrl} target="_blank" rel="noreferrer">
+            Open Supervisor in workspace <IconExternal />
+          </a>
         </div>
       </div>
 

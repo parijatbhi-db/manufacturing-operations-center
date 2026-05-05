@@ -1,0 +1,82 @@
+bundle:
+  name: parijat_semi_stdf
+variables:
+  project_name:
+    description: AI Demo Generator Project
+    default: semi_stdf
+  warehouse_name:
+    description: Name of the SQL warehouse to use
+    default: Shared Unity Catalog Serverless
+  warehouse_id:
+    lookup:
+      warehouse: ${var.warehouse_name}
+  environment:
+    description: Deployment environment
+    default: dev
+  workspace_path:
+    description: Workspace path where bundle files will be synced
+    default: /Users/parijat.bhide@databricks.com/semi_stdf
+workspace:
+  file_path: ${var.workspace_path}
+sync:
+  include:
+  - agent_bricks_service.py
+  - utils.py
+  - generate_data.py
+  - transformations.sql
+  - dashboard_test_quality_ops.lvdash.json
+  - deploy_resources.py
+  - bricks_conf.json
+targets:
+  dev:
+    default: true
+    mode: production
+    workspace:
+      root_path: ${var.workspace_path}/.bundle/${bundle.name}
+resources:
+  jobs:
+    demo_workflow:
+      name: '[DEMOGEN] - ${var.project_name} - Data Generation and Transformation'
+      tasks:
+      - task_key: generate_data
+        spark_python_task:
+          python_file: ./generate_data.py
+          source: WORKSPACE
+        environment_key: default
+        max_retries: 1
+      - task_key: sql_transformations
+        depends_on:
+        - task_key: generate_data
+        sql_task:
+          file:
+            path: ./transformations.sql
+          warehouse_id: ${var.warehouse_id}
+        max_retries: 1
+      - task_key: deploy_agent_bricks
+        depends_on:
+        - task_key: sql_transformations
+        spark_python_task:
+          python_file: ./deploy_resources.py
+          source: WORKSPACE
+        environment_key: default
+        max_retries: 1
+      environments:
+      - environment_key: default
+        spec:
+          client: '3'
+          dependencies:
+          - faker>=19.0.0
+          - holidays>=0.35
+          - databricks-sdk>=0.18.0
+  volumes:
+    raw_data_volume:
+      name: raw_data
+      catalog_name: parijat_demos
+      schema_name: manufacturing
+      volume_type: MANAGED
+      comment: Volume for semiconductor STDF raw data and artifacts
+  dashboards:
+    test_quality_ops:
+      display_name: ${var.project_name} - Semiconductor Test Quality and Throughput
+      file_path: ./dashboard_test_quality_ops.lvdash.json
+      warehouse_id: ${var.warehouse_id}
