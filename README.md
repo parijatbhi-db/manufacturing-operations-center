@@ -27,6 +27,11 @@ CPO at KARI Semiconductor Ops needs to ingest STDF wafer-sort/final-test files, 
 
 The MAS routes between the KA (definitions, change-log context) and the Genie space (live SQL on STDF gold tables).
 
+## Docs
+
+- [Design document](docs/DESIGN.md): architecture, data model, wafer-map classifier, decisions
+- [Demo talk track](docs/TALK_TRACK.md): 20-minute script, Q&A, key numbers
+
 ## Deploy from scratch
 
 ### 1. Bundle — data, dashboard, agents
