@@ -1,0 +1,337 @@
+{
+  "config": {
+    "sample_questions": [
+      {
+        "id": "25cfd4874c6749d9802230f38ffbae12",
+        "question": [
+          "What is the average UPH by site and product for the last 30 days?"
+        ]
+      },
+      {
+        "id": "40deb10fc1674ae0bdb97288fe59102c",
+        "question": [
+          "Compare the average contact resistance (PT_0210) z-score before and during the anomaly at AUS for MX-7."
+        ]
+      },
+      {
+        "id": "5f0cfb4b122a408bac93b4fc456c6825",
+        "question": [
+          "What was the cumulative cost impact of the Austin MX-7 yield anomaly?"
+        ]
+      },
+      {
+        "id": "66f7ca68a3ae4ec98dc28b335466147f",
+        "question": [
+          "What is the daily first-pass yield (FPY) trend for MX-7 at the Austin site over the last 90 days?"
+        ]
+      },
+      {
+        "id": "979b023fd9b64f5ebe3b4a516b064425",
+        "question": [
+          "What is the wafer-map pattern mix by week for MX-7 at Austin?"
+        ]
+      },
+      {
+        "id": "a19bf75d630c498085fbef25b34354f4",
+        "question": [
+          "Show me the equipment changes at the Austin site in August 2025, sorted by date."
+        ]
+      },
+      {
+        "id": "d2617ed103bd4b1397b6c0552d5ea7be",
+        "question": [
+          "How many Edge-Ring wafers did each AUS tester produce in August 2025?"
+        ]
+      },
+      {
+        "id": "d661903964134b0b862506ddea41e5fb",
+        "question": [
+          "Which hard bins had the highest failure count during the week of August 18, 2025 at Austin?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_business_impact"
+      },
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_equipment_changes"
+      },
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_failure_bins"
+      },
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_param_drift"
+      },
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_test_yield"
+      },
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_throughput"
+      },
+      {
+        "identifier": "parijat_demos.mfg_ops.mv_stdf_wafer_patterns"
+      }
+    ]
+  },
+  "instructions": {
+    "example_question_sqls": [
+      {
+        "id": "1eed306515da4b16b05e0025f2f067f2",
+        "question": [
+          "Which testers and probe cards produced Edge-Ring wafers during a date range?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  `Tester ID`,\n",
+          "  `Probe Card ID`,\n",
+          "  MEASURE(`Wafer Count`) AS `Edge-Ring Wafers`,\n",
+          "  ROUND(MEASURE(`Average Wafer Yield`) * 100, 2) AS `Avg Wafer Yield (%)`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_wafer_patterns\n",
+          "WHERE `Pattern Class` = 'Edge-Ring'\n",
+          "  AND `Sort Date` BETWEEN DATE(:start_date) AND DATE(:end_date)\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Edge-Ring Wafers` DESC\n"
+        ]
+      },
+      {
+        "id": "4444e2769cf84f78914cc3e0ffa40130",
+        "question": [
+          "How did parameter z-scores change before during and after the anomaly for a given parameter?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  CASE\n",
+          "    WHEN `Date` < DATE('2025-08-18') THEN '1-Pre-Event'\n",
+          "    WHEN `Date` BETWEEN DATE('2025-08-18') AND DATE('2025-08-27') THEN '2-During Event'\n",
+          "    ELSE '3-Post-Event'\n",
+          "  END AS `Period`,\n",
+          "  `Site`,\n",
+          "  `Parameter Code`,\n",
+          "  ROUND(MEASURE(`Mean Z-Score`), 3) AS `Mean Z-Score`,\n",
+          "  ROUND(MEASURE(`Limit Breach Rate`) * 100, 2) AS `Limit Breach Rate (%)`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_param_drift\n",
+          "WHERE `Parameter Code` = :param_code_filter\n",
+          "  AND `Site` = :site_filter\n",
+          "  AND `Product` = :product_filter\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Period`\n"
+        ]
+      },
+      {
+        "id": "6b845bd3adef429bab8079dc3ae62f67",
+        "question": [
+          "Show the top 5 failure bins by total die count for a given product with week-over-week trend"
+        ],
+        "sql": [
+          "WITH weekly AS (\n",
+          "  SELECT `Week Start`, `Hard Bin`, MEASURE(`Die Count`) AS die_count\n",
+          "  FROM parijat_demos.mfg_ops.mv_stdf_failure_bins\n",
+          "  WHERE `Product` = :product_filter\n",
+          "  GROUP BY ALL\n",
+          "),\n",
+          "ranked AS (\n",
+          "  SELECT `Hard Bin`, SUM(die_count) AS total\n",
+          "  FROM weekly\n",
+          "  GROUP BY `Hard Bin`\n",
+          "  ORDER BY total DESC\n",
+          "  LIMIT 5\n",
+          ")\n",
+          "SELECT\n",
+          "  w.`Week Start` AS `Week`,\n",
+          "  w.`Hard Bin` AS `Failure Bin`,\n",
+          "  w.die_count AS `Die Count`,\n",
+          "  r.total AS `Total (All Weeks)`\n",
+          "FROM weekly w\n",
+          "JOIN ranked r ON w.`Hard Bin` = r.`Hard Bin`\n",
+          "ORDER BY `Week`, `Die Count` DESC\n"
+        ]
+      },
+      {
+        "id": "6c3f257e91a94678a7c2b29507f09362",
+        "question": [
+          "Which failure bins had the highest die count during a specific week at a given site?"
+        ],
+        "sql": [
+          "WITH bins AS (\n",
+          "  SELECT `Hard Bin`, `Product`, MEASURE(`Die Count`) AS die_count\n",
+          "  FROM parijat_demos.mfg_ops.mv_stdf_failure_bins\n",
+          "  WHERE `Site` = :site_filter\n",
+          "    AND `Week Start` = DATE(:week_start_date)\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT\n",
+          "  `Hard Bin` AS `Failure Bin`,\n",
+          "  `Product`,\n",
+          "  die_count AS `Die Count`,\n",
+          "  ROUND(die_count * 100.0 / SUM(die_count) OVER (), 2) AS `Share of Failures (%)`\n",
+          "FROM bins\n",
+          "ORDER BY `Die Count` DESC\n"
+        ]
+      },
+      {
+        "id": "9331a5b47e8447879fb630e305365c3f",
+        "question": [
+          "What is the cumulative business impact in lost dies and cost at a site?"
+        ],
+        "sql": [
+          "WITH daily AS (\n",
+          "  SELECT `Date`, `Site`,\n",
+          "    MEASURE(`Cumulative Lost Dies`) AS lost,\n",
+          "    MEASURE(`Cumulative Cost USD`) AS cost\n",
+          "  FROM parijat_demos.mfg_ops.mv_stdf_business_impact\n",
+          "  WHERE `Site` = :site_filter\n",
+          "  GROUP BY ALL\n",
+          ")\n",
+          "SELECT\n",
+          "  `Date`,\n",
+          "  `Site`,\n",
+          "  lost AS `Cumulative Lost Dies`,\n",
+          "  CONCAT('$', FORMAT_NUMBER(cost, 2)) AS `Cumulative Cost (USD)`,\n",
+          "  lost - LAG(lost) OVER (PARTITION BY `Site` ORDER BY `Date`) AS `Daily Lost Dies`,\n",
+          "  ROUND(cost - LAG(cost) OVER (PARTITION BY `Site` ORDER BY `Date`), 2) AS `Daily Cost (USD)`\n",
+          "FROM daily\n",
+          "ORDER BY `Date`\n"
+        ]
+      },
+      {
+        "id": "9db56b6c6d6644f1a066a18212f8dad4",
+        "question": [
+          "What is the average throughput UPH by site and product over the last 30 days?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  `Site`,\n",
+          "  `Product`,\n",
+          "  ROUND(MEASURE(`Average UPH`), 1) AS `Average UPH`,\n",
+          "  MEASURE(`Total Dies Tested`) AS `Total Dies Tested`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_throughput\n",
+          "WHERE `Date` >= DATE_SUB((SELECT MAX(date) FROM parijat_demos.mfg_ops.gold_throughput_daily), 30)\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Site`, `Product`\n"
+        ]
+      },
+      {
+        "id": "a54c1c518f2649a68f36a4f365e6f455",
+        "question": [
+          "What equipment changes happened at a specific site during a date range?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  `Change Time`,\n",
+          "  `Site`,\n",
+          "  `Tester ID`,\n",
+          "  `Change Type`,\n",
+          "  `Scope`,\n",
+          "  `ECR ID`,\n",
+          "  `Details`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_equipment_changes\n",
+          "WHERE `Site` = :site_filter\n",
+          "  AND `Date` BETWEEN DATE(:start_date) AND DATE(:end_date)\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Change Time`\n"
+        ]
+      },
+      {
+        "id": "c57eb45caef1411e8e120c889f62560c",
+        "question": [
+          "What is the daily first-pass yield trend for a specific site and product?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  `Date`,\n",
+          "  `Site`,\n",
+          "  `Product`,\n",
+          "  ROUND(MEASURE(`First Pass Yield`) * 100, 2) AS `First Pass Yield (%)`,\n",
+          "  ROUND(MEASURE(`FPY Baseline 21d`) * 100, 2) AS `FPY Baseline 21d (%)`,\n",
+          "  ROUND((MEASURE(`First Pass Yield`) - MEASURE(`FPY Baseline 21d`)) * 100, 2) AS `Deviation from Baseline (pts)`,\n",
+          "  MEASURE(`Total Dies Tested`) AS `Total Dies Tested`,\n",
+          "  MEASURE(`Dies Failed`) AS `Dies Failed`,\n",
+          "  ROUND(MEASURE(`Retest Rate`) * 100, 2) AS `Retest Rate (%)`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_test_yield\n",
+          "WHERE `Site` = :site_filter\n",
+          "  AND `Product` = :product_filter\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Date`\n"
+        ]
+      },
+      {
+        "id": "d6782b65b0404481b3d4e2d68804e853",
+        "question": [
+          "Compare first-pass yield across all sites for a given product during a date range"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  `Site`,\n",
+          "  ROUND(MEASURE(`First Pass Yield`) * 100, 2) AS `Avg FPY (%)`,\n",
+          "  ROUND(MEASURE(`FPY Baseline 21d`) * 100, 2) AS `Avg Baseline FPY (%)`,\n",
+          "  ROUND((MEASURE(`First Pass Yield`) - MEASURE(`FPY Baseline 21d`)) * 100, 2) AS `Deviation (pts)`,\n",
+          "  MEASURE(`Total Dies Tested`) AS `Total Dies Tested`,\n",
+          "  MEASURE(`Dies Failed`) AS `Total Dies Failed`,\n",
+          "  ROUND(MEASURE(`Retest Rate`) * 100, 2) AS `Avg Retest Rate (%)`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_test_yield\n",
+          "WHERE `Product` = :product_filter\n",
+          "  AND `Date` BETWEEN DATE(:start_date) AND DATE(:end_date)\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Avg FPY (%)` ASC\n"
+        ]
+      },
+      {
+        "id": "f5cceb9829914785842e2801677d9528",
+        "question": [
+          "What is the weekly wafer-map pattern mix for a site and product?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  `Week Start`,\n",
+          "  `Pattern Class`,\n",
+          "  MEASURE(`Wafer Count`) AS `Wafers`,\n",
+          "  ROUND(MEASURE(`Average Wafer Yield`) * 100, 2) AS `Avg Wafer Yield (%)`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_wafer_patterns\n",
+          "WHERE `Site` = :site_filter\n",
+          "  AND `Product` = :product_filter\n",
+          "GROUP BY ALL\n",
+          "ORDER BY `Week Start`, `Wafers` DESC\n"
+        ]
+      }
+    ],
+    "text_instructions": [
+      {
+        "content": [
+          "This space analyzes KARI Semiconductor STDF (Standard Test Data Format) wafer sort and final test data.\n",
+          "Key context:\n",
+          "- Sites: AUS (Austin), HSC (Hsinchu), PNG (Penang)\n",
+          "- Products: MX-5, MX-7, RF-22\n",
+          "- Foundries: F10, F12\n",
+          "- A yield anomaly occurred at AUS for MX-7 between 2025-08-18 and 2025-08-27\n",
+          "- Root cause: probe card PC-AUS-447 Rev C + handler firmware HF-3.2.1\n",
+          "- FPY baseline for AUS/MX-7 is ~95.3%; during anomaly it dropped to ~88.5%\n",
+          "- Recovery: firmware rollback to HF-3.1.9 on 2025-08-24 at 22:15\n",
+          "- Cost model: $15 per lost die + $0.35 per retest\n",
+          "When computing FPY (first-pass yield), use: dies_pass_fp / dies_tested from gold_test_kpis_daily.\n",
+          "When comparing to baseline, use the fpy_baseline_21d column (trailing 21-day moving average).\n",
+          "For bin analysis, gold_bin_mix_weekly excludes pass bins (HB_001, HB_002) and groups low-count bins as 'Other'.\n",
+          "Parameter drift uses z-scores relative to pre-event baseline (2025-07-28 to 2025-08-17).\n",
+          "A positive z-score for PT_0210 (contact resistance) means the measurement shifted higher than baseline.\n",
+          "For date filtering, always use DATE type comparisons, e.g., WHERE date BETWEEN DATE('2025-08-18') AND DATE('2025-08-27').\n",
+          "Formatting guidelines:\n",
+          "- Always format percentages with 2 decimal places (e.g., 95.32%)\n",
+          "- Always format dollar amounts with $ prefix and 2 decimal places\n",
+          "- When showing trends, order by date ascending\n",
+          "- When showing rankings (top bins, top params), order by count or value descending\n",
+          "- Include site and product in GROUP BY when the user asks for comparisons across sites\n",
+          "All data sources are defined as metric views with pre-defined measures and dimensions for consistent analytics.\n",
+          "Metric views: mv_stdf_test_yield (FPY/yield), mv_stdf_failure_bins (bin distribution), mv_stdf_param_drift (z-scores), mv_stdf_throughput (UPH), mv_stdf_business_impact (cost/die loss), mv_stdf_equipment_changes (change log), mv_stdf_wafer_patterns (wafer-map pattern class per wafer).\n",
+          "Wafer-map patterns: every wafer is probed in one sort session and classified into a WM-811K pattern class: None, Random, Center, Donut, Edge-Ring, Edge-Loc, Loc, Scratch, Near-full.\n",
+          "'Patterned' wafers are those whose Pattern Class is not None or Random. Use the Patterned Wafer Rate measure for pattern prevalence.\n",
+          "The AUS MX-7 incident shows up as Edge-Ring wafers on testers TST-AUS-03, TST-AUS-04, TST-AUS-05 with probe card PC-AUS-447, starting 2025-08-18. Edge-Ring and Edge-Loc failures are mostly hard bin HB_021 (open/short contact).\n",
+          "When querying metric views, wrap measures in MEASURE(), e.g. SELECT `Pattern Class`, MEASURE(`Wafer Count`) FROM parijat_demos.mfg_ops.mv_stdf_wafer_patterns GROUP BY ALL.\n"
+        ],
+        "id": "d2a065dedb1a46b1872461fcf2cd1d90"
+      }
+    ]
+  },
+  "version": 2
+}

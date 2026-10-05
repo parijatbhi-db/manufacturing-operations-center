@@ -8,3 +8,4 @@ client/node_modules/
 .idea/
 *.log
 .databricks/
+__pycache__/

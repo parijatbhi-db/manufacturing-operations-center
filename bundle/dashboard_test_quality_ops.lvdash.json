@@ -1,75 +1,141 @@
 {
   "datasets": [
     {
-      "name": "ds_counter_total_dies_30d",
       "displayName": "Counter: Total Dies Tested (Last 30d)",
+      "name": "ds_counter_total_dies_30d",
       "queryLines": [
-        "SELECT total_dies_30d FROM parijat_demos.manufacturing.gold_counter_total_dies_30d "
+        "SELECT total_dies_30d FROM parijat_demos.mfg_ops.gold_counter_total_dies_30d "
       ]
     },
     {
-      "name": "ds_counter_avg_fpy_14d",
       "displayName": "Counter: Avg FPY (Last 14d)",
+      "name": "ds_counter_avg_fpy_14d",
       "queryLines": [
-        "SELECT avg_fpy_14d FROM parijat_demos.manufacturing.gold_counter_avg_fpy_14d "
+        "SELECT avg_fpy_14d FROM parijat_demos.mfg_ops.gold_counter_avg_fpy_14d "
       ]
     },
     {
-      "name": "ds_counter_avg_retest_14d",
       "displayName": "Counter: Avg Retest Rate (Last 14d)",
+      "name": "ds_counter_avg_retest_14d",
       "queryLines": [
-        "SELECT avg_retest_rate_14d FROM parijat_demos.manufacturing.gold_counter_avg_retest_14d "
+        "SELECT avg_retest_rate_14d FROM parijat_demos.mfg_ops.gold_counter_avg_retest_14d "
       ]
     },
     {
-      "name": "ds_counter_avg_uph_7d",
-      "displayName": "Counter: Avg UPH (Trailing 7d)",
-      "queryLines": [
-        "SELECT avg_uph_7d FROM parijat_demos.manufacturing.gold_counter_avg_uph_7d "
-      ]
-    },
-    {
-      "name": "ds_test_kpis_daily",
       "displayName": "Daily Test KPIs",
+      "name": "ds_test_kpis_daily",
       "queryLines": [
-        "SELECT date, site, product, foundry, dies_tested, dies_pass_fp, dies_fail, fpy, retest_rate, fpy_baseline_21d FROM parijat_demos.manufacturing.gold_test_kpis_daily ORDER BY date, site, product "
+        "SELECT date, site, product, foundry, dies_tested, dies_pass_fp, dies_fail, fpy, retest_rate, fpy_baseline_21d FROM parijat_demos.mfg_ops.gold_test_kpis_daily ORDER BY date, site, product "
       ]
     },
     {
-      "name": "ds_bin_mix_weekly",
       "displayName": "Weekly Failure Bin Mix",
+      "name": "ds_bin_mix_weekly",
       "queryLines": [
-        "SELECT week_start, site, product, hard_bin AS hard_bin_code, CASE WHEN hard_bin IN ('HB_014','HB_021','HB_007','HB_032') THEN hard_bin ELSE 'Other' END AS hard_bin_group, die_count FROM parijat_demos.manufacturing.gold_bin_mix_weekly ORDER BY week_start, site, hard_bin_group "
+        "SELECT week_start, site, product, hard_bin AS hard_bin_code, CASE WHEN hard_bin IN ('HB_014','HB_021','HB_007','HB_032') THEN hard_bin ELSE 'Other' END AS hard_bin_group, die_count FROM parijat_demos.mfg_ops.gold_bin_mix_weekly ORDER BY week_start, site, hard_bin_group "
       ]
     },
     {
-      "name": "ds_param_drift_timeseries",
       "displayName": "Parameter Drift Timeseries",
+      "name": "ds_param_drift_timeseries",
       "queryLines": [
-        "SELECT date, site, product, param_code, mean_z, pct_limit_breach FROM parijat_demos.manufacturing.gold_param_drift_timeseries ORDER BY date, site, param_code "
+        "SELECT date, site, product, param_code, mean_z, pct_limit_breach FROM parijat_demos.mfg_ops.gold_param_drift_timeseries ORDER BY date, site, param_code "
       ]
     },
     {
-      "name": "ds_change_log",
       "displayName": "Equipment and Recipe Change Log",
+      "name": "ds_change_log",
       "queryLines": [
-        "SELECT change_time, date, week_start, site, tester_id, change_type, scope, ecr_id, details FROM parijat_demos.manufacturing.gold_change_log ORDER BY change_time DESC "
+        "SELECT change_time, date, week_start, site, tester_id, change_type, scope, ecr_id, details FROM parijat_demos.mfg_ops.gold_change_log ORDER BY change_time DESC "
       ]
     },
     {
-      "name": "ds_impact_cumulative",
       "displayName": "Cumulative Impact (Lost Dies and Cost)",
+      "name": "ds_impact_cumulative",
       "queryLines": [
-        "SELECT date, site, cumulative_lost_dies, cumulative_cost_usd FROM parijat_demos.manufacturing.gold_impact_cumulative ORDER BY date, site "
+        "SELECT date, site, cumulative_lost_dies, cumulative_cost_usd FROM parijat_demos.mfg_ops.gold_impact_cumulative ORDER BY date, site "
+      ]
+    },
+    {
+      "name": "ds_wafer_patterns",
+      "displayName": "Wafer Patterns",
+      "queryLines": [
+        "SELECT wafer_id, lot_id, site, product, foundry, tester_id, probe_card_id, handler_id, sort_date, week_start, ",
+        "wafer_yield, pattern_class, likely_cause, fail_rate, edge_fail_rate, spatial_chi2_ratio, reviewed_pattern, ",
+        "CASE WHEN pattern_class NOT IN ('None', 'Random') THEN 1 ELSE 0 END AS is_patterned, ",
+        "CASE WHEN pattern_class = 'Edge-Ring' THEN 1 ELSE 0 END AS is_edge_ring ",
+        "FROM parijat_demos.mfg_ops.gold_wafer_patterns"
+      ]
+    },
+    {
+      "name": "ds_patterned_wafers",
+      "displayName": "Patterned Wafers",
+      "queryLines": [
+        "SELECT wafer_id, lot_id, site, product, tester_id, probe_card_id, sort_date, pattern_class, likely_cause, ",
+        "wafer_yield, edge_fail_rate, reviewed_pattern ",
+        "FROM parijat_demos.mfg_ops.gold_wafer_patterns WHERE pattern_class NOT IN ('None', 'Random')"
+      ]
+    },
+    {
+      "name": "ds_wafer_pattern_weekly",
+      "displayName": "Weekly Wafer Pattern Mix",
+      "queryLines": [
+        "SELECT week_start, site, product, pattern_class, wafer_count, avg_wafer_yield ",
+        "FROM parijat_demos.mfg_ops.gold_wafer_pattern_weekly WHERE pattern_class <> 'None'"
+      ]
+    },
+    {
+      "name": "ds_wafer_list",
+      "displayName": "Wafer List",
+      "queryLines": [
+        "SELECT wafer_id FROM parijat_demos.mfg_ops.gold_wafer_patterns ORDER BY wafer_id"
+      ]
+    },
+    {
+      "name": "ds_wafer_map_dies",
+      "displayName": "Wafer Map Dies",
+      "queryLines": [
+        "SELECT wafer_id, die_x, die_y, bin_label, radial_zone ",
+        "FROM parijat_demos.mfg_ops.gold_wafer_map_dies WHERE wafer_id = :wafer_id"
+      ],
+      "parameters": [
+        {
+          "displayName": "wafer_id",
+          "keyword": "wafer_id",
+          "dataType": "STRING",
+          "defaultSelection": {
+            "values": {
+              "dataType": "STRING",
+              "values": [
+                {
+                  "value": "MX7-F12-W27-W01"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ds_wafer_pattern_eval",
+      "displayName": "Classifier vs Engineer Review",
+      "queryLines": [
+        "SELECT reviewed_pattern, predicted_pattern, wafer_count, is_match ",
+        "FROM parijat_demos.mfg_ops.gold_wafer_pattern_eval ORDER BY reviewed_pattern, wafer_count DESC"
       ]
     }
   ],
   "pages": [
     {
-      "name": "global_filters",
       "displayName": "Global Filters",
       "layout": [
         {
+          "position": {
+            "height": 2,
+            "width": 2,
+            "x": 0,
+            "y": 0
+          },
           "widget": {
             "name": "filter_date_range",
             "queries": [
@@ -77,96 +143,94 @@
                 "name": "ds_test_kpis_daily_date",
                 "query": {
                   "datasetName": "ds_test_kpis_daily",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "date",
-                      "expression": "`date`"
+                      "expression": "`date`",
+                      "name": "date"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_bin_mix_weekly_week_start",
                 "query": {
                   "datasetName": "ds_bin_mix_weekly",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "week_start",
-                      "expression": "`week_start`"
+                      "expression": "`week_start`",
+                      "name": "week_start"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_param_drift_timeseries_date",
                 "query": {
                   "datasetName": "ds_param_drift_timeseries",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "date",
-                      "expression": "`date`"
+                      "expression": "`date`",
+                      "name": "date"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_change_log_date",
                 "query": {
                   "datasetName": "ds_change_log",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "date",
-                      "expression": "`date`"
+                      "expression": "`date`",
+                      "name": "date"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_impact_cumulative_date",
                 "query": {
                   "datasetName": "ds_impact_cumulative",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "date",
-                      "expression": "`date`"
+                      "expression": "`date`",
+                      "name": "date"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "filter-date-range-picker",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "date",
                     "displayName": "Date",
+                    "fieldName": "date",
                     "queryName": "ds_test_kpis_daily_date"
                   },
                   {
-                    "fieldName": "week_start",
                     "displayName": "Week Start",
+                    "fieldName": "week_start",
                     "queryName": "ds_bin_mix_weekly_week_start"
                   },
                   {
-                    "fieldName": "date",
                     "displayName": "Date",
+                    "fieldName": "date",
                     "queryName": "ds_param_drift_timeseries_date"
                   },
                   {
-                    "fieldName": "date",
                     "displayName": "Date",
+                    "fieldName": "date",
                     "queryName": "ds_change_log_date"
                   },
                   {
-                    "fieldName": "date",
                     "displayName": "Date",
+                    "fieldName": "date",
                     "queryName": "ds_impact_cumulative_date"
                   }
                 ]
@@ -174,17 +238,19 @@
               "frame": {
                 "showTitle": true,
                 "title": "Filter by Date Range"
-              }
+              },
+              "version": 2,
+              "widgetType": "filter-date-range-picker"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 0,
-            "width": 2,
-            "height": 2
           }
         },
         {
+          "position": {
+            "height": 2,
+            "width": 2,
+            "x": 0,
+            "y": 2
+          },
           "widget": {
             "name": "filter_site",
             "queries": [
@@ -192,119 +258,119 @@
                 "name": "ds_test_kpis_daily_site",
                 "query": {
                   "datasetName": "ds_test_kpis_daily",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "site",
-                      "expression": "`site`"
+                      "expression": "`site`",
+                      "name": "site"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_bin_mix_weekly_site",
                 "query": {
                   "datasetName": "ds_bin_mix_weekly",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "site",
-                      "expression": "`site`"
+                      "expression": "`site`",
+                      "name": "site"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_param_drift_timeseries_site",
                 "query": {
                   "datasetName": "ds_param_drift_timeseries",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "site",
-                      "expression": "`site`"
+                      "expression": "`site`",
+                      "name": "site"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_change_log_site",
                 "query": {
                   "datasetName": "ds_change_log",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "site",
-                      "expression": "`site`"
+                      "expression": "`site`",
+                      "name": "site"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_impact_cumulative_site",
                 "query": {
                   "datasetName": "ds_impact_cumulative",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "site",
-                      "expression": "`site`"
+                      "expression": "`site`",
+                      "name": "site"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "site",
+                    "dataType": "STRING",
                     "displayName": "Site",
-                    "queryName": "ds_test_kpis_daily_site",
-                    "dataType": "STRING"
+                    "fieldName": "site",
+                    "queryName": "ds_test_kpis_daily_site"
                   },
                   {
-                    "fieldName": "site",
+                    "dataType": "STRING",
                     "displayName": "Site",
-                    "queryName": "ds_bin_mix_weekly_site",
-                    "dataType": "STRING"
+                    "fieldName": "site",
+                    "queryName": "ds_bin_mix_weekly_site"
                   },
                   {
-                    "fieldName": "site",
+                    "dataType": "STRING",
                     "displayName": "Site",
-                    "queryName": "ds_param_drift_timeseries_site",
-                    "dataType": "STRING"
+                    "fieldName": "site",
+                    "queryName": "ds_param_drift_timeseries_site"
                   },
                   {
-                    "fieldName": "site",
+                    "dataType": "STRING",
                     "displayName": "Site",
-                    "queryName": "ds_change_log_site",
-                    "dataType": "STRING"
+                    "fieldName": "site",
+                    "queryName": "ds_change_log_site"
                   },
                   {
-                    "fieldName": "site",
+                    "dataType": "STRING",
                     "displayName": "Site",
-                    "queryName": "ds_impact_cumulative_site",
-                    "dataType": "STRING"
+                    "fieldName": "site",
+                    "queryName": "ds_impact_cumulative_site"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Filter by Site"
-              }
+              },
+              "version": 2,
+              "widgetType": "filter-single-select"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 2,
-            "height": 2
           }
         },
         {
+          "position": {
+            "height": 2,
+            "width": 2,
+            "x": 0,
+            "y": 4
+          },
           "widget": {
             "name": "filter_product",
             "queries": [
@@ -312,81 +378,81 @@
                 "name": "ds_test_kpis_daily_product",
                 "query": {
                   "datasetName": "ds_test_kpis_daily",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "product",
-                      "expression": "`product`"
+                      "expression": "`product`",
+                      "name": "product"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_bin_mix_weekly_product",
                 "query": {
                   "datasetName": "ds_bin_mix_weekly",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "product",
-                      "expression": "`product`"
+                      "expression": "`product`",
+                      "name": "product"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               },
               {
                 "name": "ds_param_drift_timeseries_product",
                 "query": {
                   "datasetName": "ds_param_drift_timeseries",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "product",
-                      "expression": "`product`"
+                      "expression": "`product`",
+                      "name": "product"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "product",
+                    "dataType": "STRING",
                     "displayName": "Product",
-                    "queryName": "ds_test_kpis_daily_product",
-                    "dataType": "STRING"
+                    "fieldName": "product",
+                    "queryName": "ds_test_kpis_daily_product"
                   },
                   {
-                    "fieldName": "product",
+                    "dataType": "STRING",
                     "displayName": "Product",
-                    "queryName": "ds_bin_mix_weekly_product",
-                    "dataType": "STRING"
+                    "fieldName": "product",
+                    "queryName": "ds_bin_mix_weekly_product"
                   },
                   {
-                    "fieldName": "product",
+                    "dataType": "STRING",
                     "displayName": "Product",
-                    "queryName": "ds_param_drift_timeseries_product",
-                    "dataType": "STRING"
+                    "fieldName": "product",
+                    "queryName": "ds_param_drift_timeseries_product"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Filter by Product"
-              }
+              },
+              "version": 2,
+              "widgetType": "filter-single-select"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 4,
-            "width": 2,
-            "height": 2
           }
         },
         {
+          "position": {
+            "height": 2,
+            "width": 2,
+            "x": 0,
+            "y": 6
+          },
           "widget": {
             "name": "filter_foundry",
             "queries": [
@@ -394,43 +460,43 @@
                 "name": "ds_test_kpis_daily_foundry",
                 "query": {
                   "datasetName": "ds_test_kpis_daily",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "foundry",
-                      "expression": "`foundry`"
+                      "expression": "`foundry`",
+                      "name": "foundry"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "filter-single-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "foundry",
+                    "dataType": "STRING",
                     "displayName": "Foundry",
-                    "queryName": "ds_test_kpis_daily_foundry",
-                    "dataType": "STRING"
+                    "fieldName": "foundry",
+                    "queryName": "ds_test_kpis_daily_foundry"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Filter by Foundry"
-              }
+              },
+              "version": 2,
+              "widgetType": "filter-single-select"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 6,
-            "width": 2,
-            "height": 2
           }
         },
         {
+          "position": {
+            "height": 2,
+            "width": 2,
+            "x": 0,
+            "y": 8
+          },
           "widget": {
             "name": "filter_tester_id",
             "queries": [
@@ -438,50 +504,63 @@
                 "name": "ds_change_log_tester_id",
                 "query": {
                   "datasetName": "ds_change_log",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "tester_id",
-                      "expression": "`tester_id`"
+                      "expression": "`tester_id`",
+                      "name": "tester_id"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "filter-multi-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "tester_id",
+                    "dataType": "STRING",
                     "displayName": "Tester ID",
-                    "queryName": "ds_change_log_tester_id",
-                    "dataType": "STRING"
+                    "fieldName": "tester_id",
+                    "queryName": "ds_change_log_tester_id"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Filter by Tester ID"
-              }
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 8,
-            "width": 2,
-            "height": 2
           }
         },
         {
+          "position": {
+            "height": 2,
+            "width": 2,
+            "x": 0,
+            "y": 10
+          },
           "widget": {
             "name": "filter_wafer_id",
             "queries": [
               {
-                "name": "ds_param_drift_timeseries_wafer_id",
+                "name": "ds_wafer_patterns_wafer_id",
                 "query": {
-                  "datasetName": "ds_param_drift_timeseries",
+                  "datasetName": "ds_wafer_patterns",
+                  "fields": [
+                    {
+                      "name": "wafer_id",
+                      "expression": "`wafer_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "ds_patterned_wafers_wafer_id",
+                "query": {
+                  "datasetName": "ds_patterned_wafers",
                   "fields": [
                     {
                       "name": "wafer_id",
@@ -493,57 +572,63 @@
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "filter-multi-select",
               "encodings": {
                 "fields": [
                   {
-                    "fieldName": "wafer_id",
+                    "dataType": "STRING",
                     "displayName": "Wafer ID",
-                    "queryName": "ds_param_drift_timeseries_wafer_id",
-                    "dataType": "STRING"
+                    "fieldName": "wafer_id",
+                    "queryName": "ds_wafer_patterns_wafer_id"
+                  },
+                  {
+                    "dataType": "STRING",
+                    "displayName": "Wafer ID",
+                    "fieldName": "wafer_id",
+                    "queryName": "ds_patterned_wafers_wafer_id"
                   }
                 ]
               },
               "frame": {
                 "showTitle": true,
                 "title": "Filter by Wafer ID"
-              }
+              },
+              "version": 2,
+              "widgetType": "filter-multi-select"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 10,
-            "width": 2,
-            "height": 2
           }
         }
       ],
+      "name": "global_filters",
       "pageType": "PAGE_TYPE_GLOBAL_FILTERS"
     },
     {
-      "name": "test_quality_ops",
       "displayName": "Semiconductor Test Quality and Throughput",
       "layout": [
         {
+          "position": {
+            "height": 2,
+            "width": 12,
+            "x": 0,
+            "y": 0
+          },
           "widget": {
-            "name": "header_story",
             "multilineTextboxSpec": {
               "lines": [
                 "# Semiconductor Test Quality and Throughput\n",
                 "Executive monitoring of FPY, bin and parameter shifts, site-equipment isolation, change log alignment, and business impact in die loss and throughput.\n",
                 "The MX-7 AUS anomaly (2025-08-18..2025-08-27) should stand out while keeping full-run context.\n"
               ]
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 0,
-            "width": 6,
-            "height": 2
+            },
+            "name": "header_story"
           }
         },
         {
+          "position": {
+            "height": 3,
+            "width": 4,
+            "x": 0,
+            "y": 2
+          },
           "widget": {
             "name": "kpi_total_dies_30d",
             "queries": [
@@ -551,48 +636,48 @@
                 "name": "main_query",
                 "query": {
                   "datasetName": "ds_counter_total_dies_30d",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "sum(total_dies_30d)",
-                      "expression": "SUM(`total_dies_30d`)"
+                      "expression": "SUM(`total_dies_30d`)",
+                      "name": "sum(total_dies_30d)"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "sum(total_dies_30d)",
                   "displayName": "Total Dies (30d)",
+                  "fieldName": "sum(total_dies_30d)",
                   "format": {
-                    "type": "number",
                     "decimalPlaces": {
-                      "type": "max",
-                      "places": 0
-                    }
+                      "places": 0,
+                      "type": "max"
+                    },
+                    "type": "number"
                   }
                 }
               },
               "frame": {
-                "title": "Total Dies Tested (Last 30d)",
-                "showTitle": true,
                 "description": "Total die count tested over trailing 30 days across all sites/products; context for scale.",
-                "showDescription": true
-              }
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Total Dies Tested (Last 30d)"
+              },
+              "version": 2,
+              "widgetType": "counter"
             }
-          },
-          "position": {
-            "x": 0,
-            "y": 2,
-            "width": 2,
-            "height": 3
           }
         },
         {
+          "position": {
+            "height": 3,
+            "width": 4,
+            "x": 4,
+            "y": 2
+          },
           "widget": {
             "name": "kpi_avg_fpy_14d",
             "queries": [
@@ -600,48 +685,48 @@
                 "name": "main_query",
                 "query": {
                   "datasetName": "ds_counter_avg_fpy_14d",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "avg(avg_fpy_14d)",
-                      "expression": "AVG(`avg_fpy_14d`)"
+                      "expression": "AVG(`avg_fpy_14d`)",
+                      "name": "avg(avg_fpy_14d)"
                     }
-                  ],
-                  "disaggregated": false
+                  ]
                 }
               }
             ],
             "spec": {
-              "version": 2,
-              "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "avg(avg_fpy_14d)",
                   "displayName": "Avg FPY (14d)",
+                  "fieldName": "avg(avg_fpy_14d)",
                   "format": {
-                    "type": "number-percent",
                     "decimalPlaces": {
-                      "type": "max",
-                      "places": 1
-                    }
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-percent"
                   }
                 }
               },
               "frame": {
-                "title": "Avg FPY (Last 14d)",
-                "showTitle": true,
                 "description": "Average first-pass yield over the last 14 days across filters.",
-                "showDescription": true
-              }
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Avg FPY (Last 14d)"
+              },
+              "version": 2,
+              "widgetType": "counter"
             }
-          },
-          "position": {
-            "x": 2,
-            "y": 2,
-            "width": 2,
-            "height": 3
           }
         },
         {
+          "position": {
+            "height": 3,
+            "width": 4,
+            "x": 8,
+            "y": 2
+          },
           "widget": {
             "name": "kpi_retest_rate_14d",
             "queries": [
@@ -649,10 +734,636 @@
                 "name": "main_query",
                 "query": {
                   "datasetName": "ds_counter_avg_retest_14d",
+                  "disaggregated": false,
                   "fields": [
                     {
-                      "name": "avg(avg_retest_rate_14d)",
-                      "expression": "AVG(`avg_retest_rate_14d`)"
+                      "expression": "AVG(`avg_retest_rate_14d`)",
+                      "name": "avg(avg_retest_rate_14d)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "value": {
+                  "displayName": "Retest Rate (14d)",
+                  "fieldName": "avg(avg_retest_rate_14d)",
+                  "format": {
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-percent"
+                  }
+                }
+              },
+              "frame": {
+                "description": "Average retest rate over the last 14 days.",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Retest Rate (Last 14d)"
+              },
+              "version": 2,
+              "widgetType": "counter"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 5,
+            "width": 6,
+            "x": 0,
+            "y": 5
+          },
+          "widget": {
+            "name": "line_fpy_by_date_daily",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_test_kpis_daily",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`site`",
+                      "name": "site"
+                    },
+                    {
+                      "expression": "`date`",
+                      "name": "date"
+                    },
+                    {
+                      "expression": "AVG(`fpy`)",
+                      "name": "avg(fpy)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Site",
+                  "fieldName": "site",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "displayName": "Date",
+                  "fieldName": "date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "axis": {
+                    "title": "FPY (%)"
+                  },
+                  "displayName": "FPY (%)",
+                  "fieldName": "avg(fpy)",
+                  "format": {
+                    "decimalPlaces": {
+                      "places": 1,
+                      "type": "max"
+                    },
+                    "type": "number-percent"
+                  },
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "description": "X: date (daily); Y: FPY (%). Lines by site (AUS, HSC, PNG). Expect visible dip for AUS starting 2025-08-18 on MX-7 filter; HSC stays stable.",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "FPY by Date (Daily)"
+              },
+              "version": 3,
+              "widgetType": "line"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 5,
+            "width": 6,
+            "x": 6,
+            "y": 5
+          },
+          "widget": {
+            "name": "bar_failure_bin_mix_weekly_grouped",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_bin_mix_weekly",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`hard_bin_group`",
+                      "name": "hard_bin_group"
+                    },
+                    {
+                      "expression": "`week_start`",
+                      "name": "week_start"
+                    },
+                    {
+                      "expression": "SUM(`die_count`)",
+                      "name": "sum(die_count)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Hard Bin",
+                  "fieldName": "hard_bin_group",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "displayName": "Week Start",
+                  "fieldName": "week_start",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "axis": {
+                    "title": "Failure Die Count"
+                  },
+                  "displayName": "Failure Die Count",
+                  "fieldName": "sum(die_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "description": "X: week_start; Y: die_count in failure hard bins; grouped bars by hard_bin_code (top 5, others collapsed). Shows HB_021 surge during incident.",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Failure Bin Mix (Grouped by Week)"
+              },
+              "mark": {
+                "layout": "group"
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 5,
+            "width": 6,
+            "x": 0,
+            "y": 10
+          },
+          "widget": {
+            "name": "line_top_drifting_params_daily",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_param_drift_timeseries",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`param_code`",
+                      "name": "param_code"
+                    },
+                    {
+                      "expression": "`date`",
+                      "name": "date"
+                    },
+                    {
+                      "expression": "AVG(`mean_z`)",
+                      "name": "avg(mean_z)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Parameter Code",
+                  "fieldName": "param_code",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "displayName": "Date",
+                  "fieldName": "date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "axis": {
+                    "title": "Mean Z-score vs Baseline"
+                  },
+                  "displayName": "Mean Z-score",
+                  "fieldName": "avg(mean_z)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "description": "X: date (daily); Y: zscore vs pre-event baseline for parameter means. Lines: PT_0210, PT_0217, PT_0103. Expect PT_0210 spike at AUS.",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Top Drifting Parameters (Daily)"
+              },
+              "version": 3,
+              "widgetType": "line"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 5,
+            "width": 6,
+            "x": 6,
+            "y": 10
+          },
+          "widget": {
+            "name": "bar_cumulative_die_loss_and_cost",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_impact_cumulative",
+                  "disaggregated": false,
+                  "fields": [
+                    {
+                      "expression": "`site`",
+                      "name": "site"
+                    },
+                    {
+                      "expression": "`date`",
+                      "name": "date"
+                    },
+                    {
+                      "expression": "SUM(`cumulative_lost_dies`)",
+                      "name": "sum(cumulative_lost_dies)"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "color": {
+                  "displayName": "Site",
+                  "fieldName": "site",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "x": {
+                  "displayName": "Date",
+                  "fieldName": "date",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "axis": {
+                    "title": "Cumulative Lost Dies"
+                  },
+                  "displayName": "Cumulative Lost Dies",
+                  "fieldName": "sum(cumulative_lost_dies)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "frame": {
+                "description": "X: date (daily); Y: cumulative lost_dies and cost_usd; stacked by site. Demonstrates business impact and recovery slope post-rollback.",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Cumulative Die Loss and Cost"
+              },
+              "version": 3,
+              "widgetType": "bar"
+            }
+          }
+        },
+        {
+          "position": {
+            "height": 6,
+            "width": 12,
+            "x": 0,
+            "y": 15
+          },
+          "widget": {
+            "name": "table_equipment_and_recipe_changes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_change_log",
+                  "disaggregated": true,
+                  "fields": [
+                    {
+                      "expression": "`change_time`",
+                      "name": "change_time"
+                    },
+                    {
+                      "expression": "`site`",
+                      "name": "site"
+                    },
+                    {
+                      "expression": "`tester_id`",
+                      "name": "tester_id"
+                    },
+                    {
+                      "expression": "`change_type`",
+                      "name": "change_type"
+                    },
+                    {
+                      "expression": "`scope`",
+                      "name": "scope"
+                    },
+                    {
+                      "expression": "`ecr_id`",
+                      "name": "ecr_id"
+                    },
+                    {
+                      "expression": "`details`",
+                      "name": "details"
+                    }
+                  ]
+                }
+              }
+            ],
+            "spec": {
+              "encodings": {
+                "columns": [
+                  {
+                    "dateTimeFormat": "yyyy-MM-dd HH:mm",
+                    "displayAs": "datetime",
+                    "displayName": "Change Time",
+                    "fieldName": "change_time",
+                    "type": "timestamp"
+                  },
+                  {
+                    "displayAs": "string",
+                    "displayName": "Site",
+                    "fieldName": "site",
+                    "type": "string"
+                  },
+                  {
+                    "displayAs": "string",
+                    "displayName": "Tester ID",
+                    "fieldName": "tester_id",
+                    "type": "string"
+                  },
+                  {
+                    "displayAs": "string",
+                    "displayName": "Change Type",
+                    "fieldName": "change_type",
+                    "type": "string"
+                  },
+                  {
+                    "displayAs": "string",
+                    "displayName": "Scope",
+                    "fieldName": "scope",
+                    "type": "string"
+                  },
+                  {
+                    "displayAs": "string",
+                    "displayName": "ECR ID",
+                    "fieldName": "ecr_id",
+                    "type": "string"
+                  },
+                  {
+                    "displayAs": "string",
+                    "displayName": "Details",
+                    "fieldName": "details",
+                    "type": "string"
+                  }
+                ]
+              },
+              "frame": {
+                "description": "Correlate HF-3.2.1 deployment and probe card rev C with onset, and rollback with recovery.",
+                "showDescription": true,
+                "showTitle": true,
+                "title": "Equipment and Recipe Changes"
+              },
+              "version": 2,
+              "widgetType": "table"
+            }
+          }
+        }
+      ],
+      "layoutVersion": "GRID_V1",
+      "name": "test_quality_ops",
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "wafer_map_patterns",
+      "displayName": "Wafer Map Patterns",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layout": [
+        {
+          "widget": {
+            "name": "wafer_header",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Wafer Map Patterns\n",
+                "\n",
+                "Every wafer is probed in one sort session and its die map is classified into a WM-811K pattern class (Center, Donut, Edge-Ring, Edge-Loc, Loc, Scratch, Random, None). The AUS MX-7 incident shows up as an **Edge-Ring** surge on TST-AUS-03..05 with probe card PC-AUS-447 from 2025-08-18."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_wafer_site",
+            "queries": [
+              {
+                "name": "q_site_patterns",
+                "query": {
+                  "datasetName": "ds_wafer_patterns",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_site_patterned",
+                "query": {
+                  "datasetName": "ds_patterned_wafers",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_site_weekly",
+                "query": {
+                  "datasetName": "ds_wafer_pattern_weekly",
+                  "fields": [
+                    {
+                      "name": "site",
+                      "expression": "`site`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "q_site_patterns"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "q_site_patterned"
+                  },
+                  {
+                    "fieldName": "site",
+                    "displayName": "Site",
+                    "queryName": "q_site_weekly"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Site"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "filter_wafer_product",
+            "queries": [
+              {
+                "name": "q_product_patterns",
+                "query": {
+                  "datasetName": "ds_wafer_patterns",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_product_patterned",
+                "query": {
+                  "datasetName": "ds_patterned_wafers",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_product_weekly",
+                "query": {
+                  "datasetName": "ds_wafer_pattern_weekly",
+                  "fields": [
+                    {
+                      "name": "product",
+                      "expression": "`product`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product",
+                    "queryName": "q_product_patterns"
+                  },
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product",
+                    "queryName": "q_product_patterned"
+                  },
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product",
+                    "queryName": "q_product_weekly"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Product"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 3,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_wafers_sorted",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_wafer_patterns",
+                  "fields": [
+                    {
+                      "name": "count(wafer_id)",
+                      "expression": "COUNT(`wafer_id`)"
                     }
                   ],
                   "disaggregated": false
@@ -664,8 +1375,50 @@
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "avg(avg_retest_rate_14d)",
-                  "displayName": "Retest Rate (14d)",
+                  "fieldName": "count(wafer_id)",
+                  "displayName": "Wafers Sorted"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Wafers Sorted",
+                "description": "All wafer sort sessions in range",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 4,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_patterned_rate",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_wafer_patterns",
+                  "fields": [
+                    {
+                      "name": "avg(is_patterned)",
+                      "expression": "AVG(`is_patterned`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(is_patterned)",
+                  "displayName": "Patterned Wafer Rate",
                   "format": {
                     "type": "number-percent",
                     "decimalPlaces": {
@@ -676,32 +1429,32 @@
                 }
               },
               "frame": {
-                "title": "Retest Rate (Last 14d)",
                 "showTitle": true,
-                "description": "Average retest rate over the last 14 days.",
+                "title": "Patterned Wafer Rate",
+                "description": "Share of wafers with a systematic spatial pattern (excludes None/Random)",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 4,
-            "y": 2,
-            "width": 1,
+            "y": 4,
+            "width": 4,
             "height": 3
           }
         },
         {
           "widget": {
-            "name": "kpi_uph_7d",
+            "name": "kpi_edge_ring_wafers",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "ds_counter_avg_uph_7d",
+                  "datasetName": "ds_wafer_patterns",
                   "fields": [
                     {
-                      "name": "avg(avg_uph_7d)",
-                      "expression": "AVG(`avg_uph_7d`)"
+                      "name": "sum(is_edge_ring)",
+                      "expression": "SUM(`is_edge_ring`)"
                     }
                   ],
                   "disaggregated": false
@@ -709,136 +1462,49 @@
               }
             ],
             "spec": {
-              "version": 3,
+              "version": 2,
               "widgetType": "counter",
               "encodings": {
                 "value": {
-                  "fieldName": "avg(avg_uph_7d)",
-                  "displayName": "UPH (Trailing 7d)",
-                  "format": {
-                    "type": "number",
-                    "decimalPlaces": {
-                      "type": "max",
-                      "places": 1
-                    }
-                  }
+                  "fieldName": "sum(is_edge_ring)",
+                  "displayName": "Edge-Ring Wafers"
                 }
               },
               "frame": {
-                "title": "UPH at Wafer Sort (Trailing 7d)",
                 "showTitle": true,
-                "description": "Average units-per-hour for wafer sort testers. Highlights dip during AUS incident.",
+                "title": "Edge-Ring Wafers",
+                "description": "Probe-contact signature of the AUS incident",
                 "showDescription": true
               }
             }
           },
           "position": {
-            "x": 5,
-            "y": 2,
-            "width": 1,
+            "x": 8,
+            "y": 4,
+            "width": 4,
             "height": 3
           }
         },
         {
           "widget": {
-            "name": "line_fpy_by_date_daily",
+            "name": "bar_pattern_mix_weekly",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "ds_test_kpis_daily",
-                  "fields": [
-                    {
-                      "name": "date",
-                      "expression": "`date`"
-                    },
-                    {
-                      "name": "site",
-                      "expression": "`site`"
-                    },
-                    {
-                      "name": "avg(fpy)",
-                      "expression": "AVG(`fpy`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "daily(date)",
-                  "scale": {
-                    "type": "temporal"
-                  },
-                  "axis": {
-                    "title": "Date"
-                  },
-                  "displayName": "Date"
-                },
-                "y": {
-                  "fieldName": "avg(fpy)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "format": {
-                    "type": "number-percent",
-                    "decimalPlaces": {
-                      "type": "max",
-                      "places": 1
-                    }
-                  },
-                  "axis": {
-                    "title": "FPY (%)"
-                  },
-                  "displayName": "FPY (%)"
-                },
-                "color": {
-                  "fieldName": "site",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "Site"
-                }
-              },
-              "frame": {
-                "title": "FPY by Date (Daily)",
-                "showTitle": true,
-                "description": "X: date (daily); Y: FPY (%). Lines by site (AUS, HSC, PNG). Expect visible dip for AUS starting 2025-08-18 on MX-7 filter; HSC stays stable.",
-                "showDescription": true
-              }
-            }
-          },
-          "position": {
-            "x": 0,
-            "y": 5,
-            "width": 3,
-            "height": 5
-          }
-        },
-        {
-          "widget": {
-            "name": "bar_failure_bin_mix_weekly_grouped",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "ds_bin_mix_weekly",
+                  "datasetName": "ds_wafer_pattern_weekly",
                   "fields": [
                     {
                       "name": "week_start",
                       "expression": "`week_start`"
                     },
                     {
-                      "name": "hard_bin_group",
-                      "expression": "`hard_bin_group`"
+                      "name": "pattern_class",
+                      "expression": "`pattern_class`"
                     },
                     {
-                      "name": "sum(die_count)",
-                      "expression": "SUM(`die_count`)"
+                      "name": "sum(wafer_count)",
+                      "expression": "SUM(`wafer_count`)"
                     }
                   ],
                   "disaggregated": false
@@ -850,148 +1516,62 @@
               "widgetType": "bar",
               "encodings": {
                 "x": {
-                  "fieldName": "weekly(week_start)",
+                  "fieldName": "week_start",
+                  "displayName": "Week",
                   "scale": {
                     "type": "temporal"
-                  },
-                  "axis": {
-                    "title": "Week Start"
-                  },
-                  "displayName": "Week Start"
+                  }
                 },
                 "y": {
-                  "fieldName": "sum(die_count)",
+                  "fieldName": "sum(wafer_count)",
+                  "displayName": "Wafers",
                   "scale": {
                     "type": "quantitative"
-                  },
-                  "axis": {
-                    "title": "Failure Die Count"
-                  },
-                  "displayName": "Failure Die Count"
+                  }
                 },
                 "color": {
-                  "fieldName": "hard_bin_group",
+                  "fieldName": "pattern_class",
+                  "displayName": "Pattern",
                   "scale": {
                     "type": "categorical"
-                  },
-                  "displayName": "Hard Bin"
-                }
-              },
-              "mark": {
-                "layout": "group"
-              },
-              "frame": {
-                "title": "Failure Bin Mix (Grouped by Week)",
-                "showTitle": true,
-                "description": "X: week_start; Y: die_count in failure hard bins; grouped bars by hard_bin_code (top 5, others collapsed). Shows HB_021 surge during incident.",
-                "showDescription": true
-              }
-            }
-          },
-          "position": {
-            "x": 3,
-            "y": 5,
-            "width": 3,
-            "height": 5
-          }
-        },
-        {
-          "widget": {
-            "name": "line_top_drifting_params_daily",
-            "queries": [
-              {
-                "name": "main_query",
-                "query": {
-                  "datasetName": "ds_param_drift_timeseries",
-                  "fields": [
-                    {
-                      "name": "date",
-                      "expression": "`date`"
-                    },
-                    {
-                      "name": "param_code",
-                      "expression": "`param_code`"
-                    },
-                    {
-                      "name": "avg(mean_z)",
-                      "expression": "AVG(`mean_z`)"
-                    }
-                  ],
-                  "disaggregated": false
-                }
-              }
-            ],
-            "spec": {
-              "version": 3,
-              "widgetType": "line",
-              "encodings": {
-                "x": {
-                  "fieldName": "daily(date)",
-                  "scale": {
-                    "type": "temporal"
-                  },
-                  "axis": {
-                    "title": "Date"
-                  },
-                  "displayName": "Date"
-                },
-                "y": {
-                  "fieldName": "avg(mean_z)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "axis": {
-                    "title": "Mean Z-score vs Baseline"
-                  },
-                  "displayName": "Mean Z-score"
-                },
-                "color": {
-                  "fieldName": "param_code",
-                  "scale": {
-                    "type": "categorical"
-                  },
-                  "displayName": "Parameter Code"
+                  }
                 }
               },
               "frame": {
-                "title": "Top Drifting Parameters (Daily)",
                 "showTitle": true,
-                "description": "X: date (daily); Y: zscore vs pre-event baseline for parameter means. Lines: PT_0210, PT_0217, PT_0103. Expect PT_0210 spike at AUS.",
+                "title": "Weekly Wafer Pattern Mix",
+                "description": "Wafers per week by pattern class (None excluded). Edge-Ring spikes in the week of 2025-08-18.",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 10,
-            "width": 3,
-            "height": 5
+            "y": 7,
+            "width": 6,
+            "height": 6
           }
         },
         {
           "widget": {
-            "name": "bar_cumulative_die_loss_and_cost",
+            "name": "bar_patterns_by_tester",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "ds_impact_cumulative",
+                  "datasetName": "ds_patterned_wafers",
                   "fields": [
                     {
-                      "name": "date",
-                      "expression": "`date`"
+                      "name": "tester_id",
+                      "expression": "`tester_id`"
                     },
                     {
-                      "name": "site",
-                      "expression": "`site`"
+                      "name": "pattern_class",
+                      "expression": "`pattern_class`"
                     },
                     {
-                      "name": "sum(cumulative_lost_dies)",
-                      "expression": "SUM(`cumulative_lost_dies`)"
-                    },
-                    {
-                      "name": "sum(cumulative_cost_usd)",
-                      "expression": "SUM(`cumulative_cost_usd`)"
+                      "name": "count(wafer_id)",
+                      "expression": "COUNT(`wafer_id`)"
                     }
                   ],
                   "disaggregated": false
@@ -1003,103 +1583,224 @@
               "widgetType": "bar",
               "encodings": {
                 "x": {
-                  "fieldName": "daily(date)",
+                  "fieldName": "tester_id",
+                  "displayName": "Tester",
                   "scale": {
-                    "type": "temporal"
-                  },
-                  "axis": {
-                    "title": "Date"
-                  },
-                  "displayName": "Date"
+                    "type": "categorical",
+                    "sort": {
+                      "by": "y-reversed"
+                    }
+                  }
                 },
                 "y": {
-                  "fieldName": "sum(cumulative_lost_dies)",
+                  "fieldName": "count(wafer_id)",
+                  "displayName": "Patterned Wafers",
                   "scale": {
                     "type": "quantitative"
-                  },
-                  "axis": {
-                    "title": "Cumulative Lost Dies"
-                  },
-                  "displayName": "Cumulative Lost Dies"
-                },
-                "y2": {
-                  "fieldName": "sum(cumulative_cost_usd)",
-                  "scale": {
-                    "type": "quantitative"
-                  },
-                  "format": {
-                    "type": "number-currency",
-                    "currencyCode": "USD",
-                    "abbreviation": "compact",
-                    "decimalPlaces": {
-                      "type": "max",
-                      "places": 2
-                    }
-                  },
-                  "axis": {
-                    "title": "Cumulative Cost ($)"
-                  },
-                  "displayName": "Cumulative Cost ($)"
+                  }
                 },
                 "color": {
-                  "fieldName": "site",
+                  "fieldName": "pattern_class",
+                  "displayName": "Pattern",
                   "scale": {
                     "type": "categorical"
-                  },
-                  "displayName": "Site"
+                  }
                 }
               },
               "frame": {
-                "title": "Cumulative Die Loss and Cost",
                 "showTitle": true,
-                "description": "X: date (daily); Y: cumulative lost_dies and cost_usd; stacked by site. Demonstrates business impact and recovery slope post-rollback.",
+                "title": "Patterned Wafers by Tester",
+                "description": "Edge-Ring wafers concentrate on TST-AUS-03..05 (probe card PC-AUS-447)",
                 "showDescription": true
               }
             }
           },
           "position": {
-            "x": 3,
-            "y": 10,
-            "width": 3,
-            "height": 5
+            "x": 6,
+            "y": 7,
+            "width": 6,
+            "height": 6
           }
         },
         {
           "widget": {
-            "name": "table_equipment_and_recipe_changes",
+            "name": "filter_wafer_id",
+            "queries": [
+              {
+                "name": "q_wafer_options",
+                "query": {
+                  "datasetName": "ds_wafer_list",
+                  "fields": [
+                    {
+                      "name": "wafer_id",
+                      "expression": "`wafer_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "q_wafer_param",
+                "query": {
+                  "datasetName": "ds_wafer_map_dies",
+                  "parameters": [
+                    {
+                      "name": "wafer_id",
+                      "keyword": "wafer_id"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-single-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "wafer_id",
+                    "displayName": "Wafer",
+                    "queryName": "q_wafer_options"
+                  },
+                  {
+                    "parameterName": "wafer_id",
+                    "queryName": "q_wafer_param"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Wafer (for map)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 13,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "scatter_wafer_map",
             "queries": [
               {
                 "name": "main_query",
                 "query": {
-                  "datasetName": "ds_change_log",
+                  "datasetName": "ds_wafer_map_dies",
                   "fields": [
                     {
-                      "name": "change_time",
-                      "expression": "`change_time`"
+                      "name": "die_x",
+                      "expression": "`die_x`"
+                    },
+                    {
+                      "name": "die_y",
+                      "expression": "`die_y`"
+                    },
+                    {
+                      "name": "bin_label",
+                      "expression": "`bin_label`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "scatter",
+              "encodings": {
+                "x": {
+                  "fieldName": "die_x",
+                  "displayName": "Die X",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "y": {
+                  "fieldName": "die_y",
+                  "displayName": "Die Y",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "bin_label",
+                  "displayName": "Bin",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Wafer Map",
+                "description": "Die-level bin map for the selected wafer (Pass vs failing hard bin)",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 15,
+            "width": 5,
+            "height": 9
+          }
+        },
+        {
+          "widget": {
+            "name": "table_patterned_wafers",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_patterned_wafers",
+                  "fields": [
+                    {
+                      "name": "sort_date",
+                      "expression": "`sort_date`"
+                    },
+                    {
+                      "name": "wafer_id",
+                      "expression": "`wafer_id`"
                     },
                     {
                       "name": "site",
                       "expression": "`site`"
                     },
                     {
+                      "name": "product",
+                      "expression": "`product`"
+                    },
+                    {
                       "name": "tester_id",
                       "expression": "`tester_id`"
                     },
                     {
-                      "name": "change_type",
-                      "expression": "`change_type`"
+                      "name": "probe_card_id",
+                      "expression": "`probe_card_id`"
                     },
                     {
-                      "name": "scope",
-                      "expression": "`scope`"
+                      "name": "pattern_class",
+                      "expression": "`pattern_class`"
                     },
                     {
-                      "name": "ecr_id",
-                      "expression": "`ecr_id`"
+                      "name": "wafer_yield",
+                      "expression": "`wafer_yield`"
                     },
                     {
-                      "name": "details",
-                      "expression": "`details`"
+                      "name": "edge_fail_rate",
+                      "expression": "`edge_fail_rate`"
+                    },
+                    {
+                      "name": "likely_cause",
+                      "expression": "`likely_cause`"
+                    },
+                    {
+                      "name": "reviewed_pattern",
+                      "expression": "`reviewed_pattern`"
                     }
                   ],
                   "disaggregated": true
@@ -1112,70 +1813,139 @@
               "encodings": {
                 "columns": [
                   {
-                    "fieldName": "change_time",
-                    "displayName": "Change Time",
-                    "type": "timestamp",
-                    "displayAs": "datetime",
-                    "dateTimeFormat": "yyyy-MM-dd HH:mm"
+                    "fieldName": "sort_date",
+                    "displayName": "Sort Date"
+                  },
+                  {
+                    "fieldName": "wafer_id",
+                    "displayName": "Wafer"
                   },
                   {
                     "fieldName": "site",
-                    "displayName": "Site",
-                    "type": "string",
-                    "displayAs": "string"
+                    "displayName": "Site"
+                  },
+                  {
+                    "fieldName": "product",
+                    "displayName": "Product"
                   },
                   {
                     "fieldName": "tester_id",
-                    "displayName": "Tester ID",
-                    "type": "string",
-                    "displayAs": "string"
+                    "displayName": "Tester"
                   },
                   {
-                    "fieldName": "change_type",
-                    "displayName": "Change Type",
-                    "type": "string",
-                    "displayAs": "string"
+                    "fieldName": "probe_card_id",
+                    "displayName": "Probe Card"
                   },
                   {
-                    "fieldName": "scope",
-                    "displayName": "Scope",
-                    "type": "string",
-                    "displayAs": "string"
+                    "fieldName": "pattern_class",
+                    "displayName": "Pattern"
                   },
                   {
-                    "fieldName": "ecr_id",
-                    "displayName": "ECR ID",
-                    "type": "string",
-                    "displayAs": "string"
+                    "fieldName": "wafer_yield",
+                    "displayName": "Wafer Yield"
                   },
                   {
-                    "fieldName": "details",
-                    "displayName": "Details",
-                    "type": "string",
-                    "displayAs": "string"
+                    "fieldName": "edge_fail_rate",
+                    "displayName": "Edge Fail Rate"
+                  },
+                  {
+                    "fieldName": "likely_cause",
+                    "displayName": "Likely Cause"
+                  },
+                  {
+                    "fieldName": "reviewed_pattern",
+                    "displayName": "Engineer Label"
                   }
                 ]
               },
               "frame": {
-                "title": "Equipment and Recipe Changes",
                 "showTitle": true,
-                "description": "Correlate HF-3.2.1 deployment and probe card rev C with onset, and rollback with recovery.",
+                "title": "Patterned Wafers",
+                "description": "Wafers with a systematic spatial pattern; copy a wafer ID into the map filter to inspect it",
+                "showDescription": true
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 13,
+            "width": 7,
+            "height": 11
+          }
+        },
+        {
+          "widget": {
+            "name": "table_classifier_eval",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_wafer_pattern_eval",
+                  "fields": [
+                    {
+                      "name": "reviewed_pattern",
+                      "expression": "`reviewed_pattern`"
+                    },
+                    {
+                      "name": "predicted_pattern",
+                      "expression": "`predicted_pattern`"
+                    },
+                    {
+                      "name": "wafer_count",
+                      "expression": "`wafer_count`"
+                    },
+                    {
+                      "name": "is_match",
+                      "expression": "`is_match`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "reviewed_pattern",
+                    "displayName": "Engineer Label"
+                  },
+                  {
+                    "fieldName": "predicted_pattern",
+                    "displayName": "Classifier"
+                  },
+                  {
+                    "fieldName": "wafer_count",
+                    "displayName": "Wafers"
+                  },
+                  {
+                    "fieldName": "is_match",
+                    "displayName": "Match"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Classifier vs Engineer Review",
+                "description": "Agreement of the rule-based classifier with yield-engineer labels on reviewed wafers",
                 "showDescription": true
               }
             }
           },
           "position": {
             "x": 0,
-            "y": 15,
-            "width": 6,
+            "y": 24,
+            "width": 12,
             "height": 6
           }
         }
-      ],
-      "pageType": "PAGE_TYPE_CANVAS"
+      ]
     }
   ],
   "uiSettings": {
+    "applyModeEnabled": false,
     "theme": {
       "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
     }

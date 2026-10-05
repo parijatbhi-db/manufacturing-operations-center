@@ -1,19 +1,24 @@
-# generate_data.py for kari_semi_stdf demo
+# generate_data.py for the STDF Manufacturing Operations demo
 # RAW synthetic datasets that follow demo_story.json
-# - stdf_prr_parts
+# - stdf_prr_parts           (one row per die per wafer-sort session, with X/Y die coordinates)
 # - stdf_ptr_params
 # - equip_change_log
 # - lot_wafer_master
+# - wafer_review_labels      (yield-engineer pattern labels for a sample of wafers)
 #
 # Contracts:
 # - Schema fidelity (columns/dtypes)
 # - Referential integrity between PRR and PTR (part_id, wafer_id, lot_id)
-# - Event visibility: AUS MX-7 FPY drop 2025-08-18..2025-08-27 with HB_021/PT_0210 shifts, retest spike
+# - Every wafer is probed in a single sort session on one tester/probe card/handler, so each
+#   wafer has a complete die map that wafer-map pattern classification can run on
+# - Event visibility: AUS MX-7 FPY drop 2025-08-18..2025-08-27 on TST-AUS-03..05 (probe card
+#   PC-AUS-447 Rev C) shows up as an Edge-Ring pattern with HB_021/PT_0210 shifts, retest spike
 # - Seasonality: weekday/weekend volume, business-hour timestamps
 # - Datetime naive, floored to ms
 
+import argparse
+import os
 import random
-from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -21,12 +26,15 @@ from faker import Faker
 
 from utils import save_to_parquet
 
-# Set environment variables for Databricks Volumes
-import os
-os.environ['CATALOG'] = 'parijat_demos'
-os.environ['SCHEMA'] = 'manufacturing'
-os.environ['VOLUME'] = 'raw_data'
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--catalog', default='parijat_demos')
+    parser.add_argument('--schema', default='mfg_ops')
+    parser.add_argument('--volume', default='raw_data')
+    parser.add_argument('--local', action='store_true', help='Write parquet to ./data instead of a UC volume')
+    args, _ = parser.parse_known_args()
+    return args
 
 
 # ===============================
@@ -45,6 +53,7 @@ EVENT_START = pd.Timestamp('2025-08-18 07:30').floor('ms')  # trigger
 EVENT_MIN = pd.Timestamp('2025-08-20').floor('ms')          # min FPY
 EVENT_END = pd.Timestamp('2025-08-27 23:59').floor('ms')    # end of visible degradation
 RECOVERY_TIME = pd.Timestamp('2025-08-24 22:15').floor('ms')
+RESIDUAL_END = pd.Timestamp('2025-09-01 23:59').floor('ms')
 
 DAYS = pd.date_range(RANGE_START.normalize(), RANGE_END.normalize(), freq='D')
 DAYS = pd.to_datetime(DAYS, utc=False).tz_localize(None)
@@ -86,73 +95,107 @@ SOFT_FAILS = ['SB_014', 'SB_021', 'SB_007', 'SB_032']
 # Param codes
 PARAMS = ['PT_0210', 'PT_0217', 'PT_0103', 'PT_0301']  # Contact R, IDDQ, Vth, extra
 
+
+# Testers that received probe card PC-AUS-447 Rev C + handler firmware HF-3.2.1 on 2025-08-18
+AFFECTED_TESTERS = ['TST-AUS-03', 'TST-AUS-04', 'TST-AUS-05']
+AFFECTED_PROBE_CARD = 'PC-AUS-447'
+PEAK_SEVERITY = 0.36  # edge-ring kill amplitude at the height of the incident
+# Below this amplitude an edge ring is not visible to a reviewing engineer
+VISIBLE_AMPLITUDE = 0.08
+
 # ===============================
-# === LOT & WAFER MASTER
+# === WAFER GEOMETRY & PATTERNS
 # ===============================
 
-def generate_lot_wafer_master() -> pd.DataFrame:
-    print('Generating lot_wafer_master...')
-    rows = []
+# Die-grid radius (in dies) per product; dies are the grid cells inside the wafer circle
+DIE_GRID_RADIUS = {'MX-5': 12, 'MX-7': 13, 'RF-22': 11}
+# Probe index time per die (seconds)
+INDEX_TIME_S = {'MX-5': 5.0, 'MX-7': 5.5, 'RF-22': 6.5}
+WAFERS_PER_LOT = 25
 
-    # Define MX-7 focus lots in F12 with wafers W27..W29, 12-14 wafers each
-    mx7_focus = []
-    for wlot in ['W27', 'W28', 'W29']:
-        lot_id = f'MX7-F12-{wlot}'
-        n_wafers = np.random.randint(12, 15)
-        for wi in range(1, n_wafers + 1):
-            wafer_id = f'{lot_id}-W{wi:02d}'
-            dies = int(np.random.normal(980, 40))  # 900-1100 typical
-            start_date = (pd.Timestamp('2025-08-10') + pd.Timedelta(days=np.random.randint(-5, 5))).normalize()
-            rows.append({
-                'lot_id': lot_id,
-                'wafer_id': wafer_id,
-                'product': 'MX-7',
-                'foundry': 'F12',
-                'dies_per_wafer_expected': int(np.clip(dies, 860, 1150)),
-                'start_date': start_date.floor('ms'),
-                'site_planned': 'AUS',
-            })
-            mx7_focus.append(wafer_id)
+# Wafer-map pattern classes (WM-811K taxonomy)
+PATTERNS = ['None', 'Random', 'Center', 'Donut', 'Edge-Ring', 'Edge-Loc', 'Loc', 'Scratch']
+BASELINE_PATTERN_MIX = [0.72, 0.05, 0.05, 0.03, 0.03, 0.05, 0.04, 0.03]
+# Dominant hard bin for dies killed by each spatial mechanism
+PATTERN_BIN = {
+    'Center': 'HB_014',     # IDDQ leakage
+    'Donut': 'HB_032',      # parametric / Vth
+    'Edge-Ring': 'HB_021',  # open/short (contact)
+    'Edge-Loc': 'HB_021',
+    'Loc': 'HB_007',        # functional
+    'Scratch': 'HB_007',
+}
+# Approximate mean yield loss added by the baseline pattern mix; subtracted from the random
+# defect rate so overall FPY still lands on FPY_BASE
+PATTERN_LOSS_ALLOWANCE = 0.012
 
-    # Other lots across products and foundries
-    def gen_random_lots(prod: str, fnd: str, count_lots: int, site_hint: str):
-        for i in range(count_lots):
-            lot_id = f"{prod.replace('-', '')}-{fnd}-L{i+1:03d}"
-            n_wafers = np.random.randint(8, 16)
-            for wi in range(1, n_wafers + 1):
-                wafer_id = f'{lot_id}-W{wi:02d}'
-                dies = int(np.random.normal(960 if prod == 'MX-5' else 1020, 50))
-                start_date = (pd.Timestamp('2025-06-15') + pd.Timedelta(days=np.random.randint(0, 60))).normalize()
-                rows.append({
-                    'lot_id': lot_id,
-                    'wafer_id': wafer_id,
-                    'product': prod,
-                    'foundry': fnd,
-                    'dies_per_wafer_expected': int(np.clip(dies, 820, 1200)),
-                    'start_date': start_date.floor('ms'),
-                    'site_planned': site_hint,
-                })
 
-    gen_random_lots('MX-7', 'F10', 9, 'HSC')
-    gen_random_lots('MX-5', 'F10', 16, 'AUS')
-    gen_random_lots('MX-5', 'F12', 10, 'HSC')
-    gen_random_lots('RF-22', 'F10', 12, 'PNG')
-    gen_random_lots('RF-22', 'F12', 8, 'PNG')
+def die_grid(product: str):
+    """Return (x, y, r_norm, theta) arrays for all dies on the product's wafer, in serpentine probe order."""
+    R = DIE_GRID_RADIUS[product]
+    xs, ys = [], []
+    for y in range(0, 2 * R + 1):
+        row = range(0, 2 * R + 1) if y % 2 == 0 else range(2 * R, -1, -1)
+        for x in row:
+            if (x - R) ** 2 + (y - R) ** 2 <= R ** 2:
+                xs.append(x)
+                ys.append(y)
+    x = np.array(xs)
+    y = np.array(ys)
+    dx, dy = x - R, y - R
+    r_norm = np.sqrt(dx ** 2 + dy ** 2) / R
+    theta = np.arctan2(dy, dx)
+    return x, y, r_norm, theta
 
-    lot_df = pd.DataFrame(rows)
-    lot_df['start_date'] = pd.to_datetime(lot_df['start_date'], errors='coerce').dt.floor('ms')
-    print(f'lot_wafer_master rows: {len(lot_df):,}')
-    return lot_df
+
+DIE_GRIDS = {p: die_grid(p) for p in DIE_GRID_RADIUS}
+
+
+def pattern_shape(pattern: str, x, y, r_norm, theta, R: int) -> np.ndarray:
+    """Spatial kill-probability shape in [0, 1] for a pattern on one wafer."""
+    if pattern == 'Center':
+        return np.exp(-(r_norm / np.random.uniform(0.22, 0.30)) ** 2)
+    if pattern == 'Donut':
+        r0 = np.random.uniform(0.45, 0.60)
+        return np.exp(-((r_norm - r0) / 0.09) ** 2)
+    if pattern == 'Edge-Ring':
+        return 1.0 / (1.0 + np.exp(-(r_norm - 0.84) / 0.03))
+    if pattern == 'Edge-Loc':
+        t0 = np.random.uniform(-np.pi, np.pi)
+        dtheta = np.angle(np.exp(1j * (theta - t0)))
+        return (1.0 / (1.0 + np.exp(-(r_norm - 0.72) / 0.04))) * np.exp(-(dtheta / 0.45) ** 2)
+    if pattern == 'Loc':
+        rc = np.random.uniform(0.25, 0.60) * R
+        tc = np.random.uniform(-np.pi, np.pi)
+        cx, cy = R + rc * np.cos(tc), R + rc * np.sin(tc)
+        sig = np.random.uniform(0.10, 0.14) * R
+        return np.exp(-(((x - cx) ** 2 + (y - cy) ** 2) / (2 * sig ** 2)))
+    if pattern == 'Scratch':
+        # Line segment through a random chord of the wafer
+        ang = np.random.uniform(0, np.pi)
+        off = np.random.uniform(-0.35, 0.35) * R
+        nx, ny = -np.sin(ang), np.cos(ang)
+        dist_line = np.abs((x - R) * nx + (y - R) * ny - off)
+        along = (x - R) * np.cos(ang) + (y - R) * np.sin(ang)
+        half_len = np.random.uniform(0.45, 0.80) * R
+        s0 = np.random.uniform(-0.3, 0.3) * R
+        on_seg = np.abs(along - s0) <= half_len
+        return ((dist_line <= 0.55) & on_seg).astype(float)
+    return np.zeros_like(r_norm)
+
+
+PATTERN_AMPLITUDE = {
+    'Center': (0.45, 0.70),
+    'Donut': (0.30, 0.45),
+    'Edge-Ring': (0.20, 0.30),
+    'Edge-Loc': (0.55, 0.80),
+    'Loc': (0.65, 0.90),
+    'Scratch': (0.85, 0.95),
+}
 
 # ===============================
 # === UTIL HELPERS
 # ===============================
-
-def _choose(values, probs, size):
-    p = np.array(probs, dtype=float)
-    p = p / p.sum()
-    return np.random.choice(values, size=size, p=p)
-
 
 def business_hour_probs(weekday: bool) -> np.ndarray:
     if weekday:
@@ -170,13 +213,31 @@ def business_hour_probs(weekday: bool) -> np.ndarray:
     return hp / hp.sum()
 
 
+def incident_severity(ts: pd.Timestamp) -> float:
+    """Edge-ring kill amplitude on affected testers for an AUS MX-7 wafer probed at ts (0 = unaffected)."""
+    if ts < EVENT_START or ts > RESIDUAL_END:
+        return 0.0
+    if ts < RECOVERY_TIME:
+        return np.random.uniform(0.33, 0.39)
+    if ts <= EVENT_END:
+        # Linear recovery after the 2025-08-24 rollback
+        frac = (ts - RECOVERY_TIME) / (EVENT_END - RECOVERY_TIME)
+        return 0.36 - 0.26 * float(np.clip(frac, 0, 1))
+    # Residual drift through 2025-09-01
+    return np.random.uniform(0.02, 0.05)
+
+
 # ===============================
-# === STDF PRR (Part Results)
+# === WAFER SORT SCHEDULE + PRR (Part Results)
 # ===============================
 
-def generate_stdf_prr_parts(lot_df: pd.DataFrame, target_rows: int = 326_450) -> pd.DataFrame:
-    print('Generating stdf_prr_parts...')
-    rows = []
+def generate_wafer_sort(daily_dies_mean: int = 5200):
+    """Simulate wafer-sort sessions.
+
+    Returns (lot_wafer_master, prr_parts, wafer_truth) where wafer_truth carries the injected
+    pattern and incident flags (used for PTR shifts and review labels, never saved as-is).
+    """
+    print('Generating wafer sort sessions (lot_wafer_master + stdf_prr_parts)...')
 
     # Volume targets per site/product (MX-7 heavy at AUS)
     site_product_share = {
@@ -190,10 +251,8 @@ def generate_stdf_prr_parts(lot_df: pd.DataFrame, target_rows: int = 326_450) ->
         ('PNG', 'MX-5'): 0.02,
         ('PNG', 'RF-22'): 0.04,
     }
-    # Normalize to 1
     total_share = sum(site_product_share.values())
-    for k in site_product_share:
-        site_product_share[k] = site_product_share[k] / total_share
+    site_product_share = {k: v / total_share for k, v in site_product_share.items()}
 
     # Day-of-week volume multiplier
     DOW_MUL = {0: 1.05, 1: 1.10, 2: 1.12, 3: 1.08, 4: 0.96, 5: 0.72, 6: 0.68}
@@ -210,220 +269,205 @@ def generate_stdf_prr_parts(lot_df: pd.DataFrame, target_rows: int = 326_450) ->
         ('AUS', 'RF-22'): 0.940,
         ('PNG', 'MX-7'): 0.960,
     }
+    # Share of failing dies that get re-probed
+    RETEST_SHARE_BASE = 0.55
 
-    # Retest baseline
-    RETEST_BASE = {s: 0.025 for s in sites}
-
-    # Hard bin mixes (baseline fail share for non-pass)
+    # Hard bin mixes (baseline fail share for random defects)
     FAIL_MIX_BASE = np.array([0.40, 0.35, 0.15, 0.10])  # HB_014, HB_021, HB_007, HB_032
+    SOFT_FOR_HARD = dict(zip(FAIL_BINS, SOFT_FAILS))
 
-    # Prepare wafer assignments per site/product using lot master
-    lot_df = lot_df.copy()
-    # Map wafers by product/foundry/site_planned
-    wafers_by_key = {}
-    for site in sites:
-        for prod in products:
-            keys = lot_df[(lot_df['product'] == prod) & (lot_df['site_planned'] == site)]['wafer_id'].values
-            wafers_by_key[(site, prod)] = keys
+    # Lot bookkeeping: open lot per (site, product, foundry) with remaining wafer slots
+    lot_rows = []
+    lot_seq = {}
+    open_lots = {}
+    # MX-7 focus lots from F12 (W27..W29) are queued for AUS during the incident window
+    focus_queue = []
+    for wlot in ['W27', 'W28', 'W29']:
+        lot_id = f'MX7-F12-{wlot}'
+        n_wafers = np.random.randint(12, 15)
+        start_date = (pd.Timestamp('2025-08-10') + pd.Timedelta(days=np.random.randint(-5, 5))).normalize()
+        for wi in range(1, n_wafers + 1):
+            focus_queue.append((lot_id, f'{lot_id}-W{wi:02d}', 'F12', start_date))
 
-    # Precompute wafer lookups and business hour probabilities
-    wafer_to_lot = lot_df.set_index('wafer_id')['lot_id']
-    wafer_to_foundry = lot_df.set_index('wafer_id')['foundry']
+    def next_wafer(site, prod, day):
+        if site == 'AUS' and prod == 'MX-7' and EVENT_START.normalize() <= day <= EVENT_END.normalize() and focus_queue:
+            return focus_queue.pop(0)
+        fnd = 'F12' if np.random.rand() < 0.5 else 'F10'
+        key = (site, prod, fnd)
+        lot = open_lots.get(key)
+        if lot is None or lot['next'] > lot['n']:
+            seq = lot_seq.get((prod, fnd), 0) + 1
+            lot_seq[(prod, fnd)] = seq
+            lot = {
+                'lot_id': f"{prod.replace('-', '')}-{fnd}-{site[0]}{seq:03d}",
+                'n': WAFERS_PER_LOT,
+                'next': 1,
+                'start_date': (day - pd.Timedelta(days=np.random.randint(5, 15))).normalize(),
+            }
+            open_lots[key] = lot
+        wafer_id = f"{lot['lot_id']}-W{lot['next']:02d}"
+        lot['next'] += 1
+        return lot['lot_id'], wafer_id, fnd, lot['start_date']
+
     weekday_hp = business_hour_probs(True)
     weekend_hp = business_hour_probs(False)
+    program_versions = ['TP-v1.8.3', 'TP-v1.8.4', 'TP-v1.9.0', 'TP-v2.0.1']
 
-    # Part_id X/Y grid helper
-    def make_part_id(prod: str, wafer_id: str, xi: int, yi: int, attempt: int = 1) -> str:
-        prefix = prod.replace('-', '')
-        base = f"{prefix}-{wafer_id}-X{xi:03d}Y{yi:03d}"
-        return base if attempt == 1 else f"{base}-R{attempt}"
-
-    # Iterate days with progress
+    prr_chunks = []
+    truth_rows = []
     total_days = len(DAYS)
     progress_interval = max(1, total_days // 10)
 
-    seq_counter = 0
-
-    day_values = DAYS.values
-    for i, d in enumerate(day_values):
+    for i, d in enumerate(DAYS):
         if (i + 1) % progress_interval == 0 or i == 0:
-            progress = ((i + 1) / total_days) * 100
-            print(f"  Days: {progress:.0f}% ({i + 1:,}/{total_days:,})")
-
+            print(f"  Days: {((i + 1) / total_days) * 100:.0f}% ({i + 1:,}/{total_days:,})")
         day = pd.Timestamp(d).normalize()
         dow_mul = DOW_MUL.get(day.weekday(), 1.0)
+        daily_dies = max(2000, int(np.random.normal(daily_dies_mean, 500))) * dow_mul
+        hp = weekday_hp if day.weekday() < 5 else weekend_hp
+        in_event_day = EVENT_START.normalize() <= day <= EVENT_END.normalize()
 
-        # Base volume per day
-        base_daily = int(np.random.normal(3100, 350))
-        base_daily = int(max(1200, base_daily))
-        vol_today = int(base_daily * dow_mul)
+        for (site, prod), share in site_product_share.items():
+            x, y, r_norm, theta = DIE_GRIDS[prod]
+            n_dies = len(x)
+            n_wafers = np.random.poisson(daily_dies * share / n_dies)
+            fpy_base = FPY_BASE[(site, prod)]
 
-        # Split by site/product
-        combos = list(site_product_share.keys())
-        shares = np.array([site_product_share[c] for c in combos])
-        shares = shares / shares.sum()
-        counts = np.random.multinomial(vol_today, shares)
+            for _ in range(n_wafers):
+                lot_id, wafer_id, fnd, lot_start = next_wafer(site, prod, day)
+                start_ts = (day + pd.Timedelta(hours=int(np.random.choice(HOURS, p=hp)),
+                                               minutes=int(np.random.randint(0, 60)))).floor('ms')
 
-        # Event effects for AUS/MX-7 on event window
-        in_event = (day >= EVENT_START.normalize()) and (day <= EVENT_END.normalize())
-        event_intensity = 1.0
-        if in_event:
-            # Increase retest and lower FPY
-            event_intensity = 1.0
-
-        # For each combo, generate parts
-        for (site, prod), cnt in zip(combos, counts):
-            if cnt <= 0:
-                continue
-            # Choose wafers available for site/product, fallback global product wafers
-            wafers = wafers_by_key.get((site, prod))
-            if wafers is None or len(wafers) == 0:
-                wafers = lot_df[lot_df['product'] == prod]['wafer_id'].values
-            wafers_pick = np.random.choice(wafers, size=cnt, replace=True)
-
-            tester_pool = TESTERS[site]
-            testers_pick = np.random.choice(tester_pool, size=cnt, replace=True)
-
-            # Timestamp per part within business hours
-            is_weekday = day.weekday() < 5
-            hp = weekday_hp if is_weekday else weekend_hp
-            hours = np.random.choice(HOURS, size=cnt, p=hp)
-            minutes = np.random.randint(0, 60, size=cnt)
-            total_minutes = hours * 60 + minutes
-            ts = (pd.Timestamp(day) + pd.to_timedelta(total_minutes, unit='m')).floor('ms')
-
-            # Program versions by product
-            program_vers = np.random.choice([
-                'TP-v1.8.3', 'TP-v1.8.4', 'TP-v1.9.0', 'TP-v2.0.1'
-            ], size=cnt, p=[0.35, 0.30, 0.25, 0.10])
-
-            # Probe card / handler assignment
-            pc_pool = PROBE_CARDS[site]
-            hd_pool = HANDLERS[site]
-            probe_card_ids = np.random.choice(pc_pool, size=cnt, replace=True)
-            handler_ids = np.random.choice(hd_pool, size=cnt, replace=True)
-
-            # FPY and retest rates with event effect applied for AUS/MX-7
-            fpy = FPY_BASE.get((site, prod), 0.95)
-            retest_rate = RETEST_BASE[site]
-
-            # Inject AUS/MX-7 anomaly window behavior
-            if site == 'AUS' and prod == 'MX-7':
-                # Baseline FPY ~95%; drop to 88.1-89.0 during event, partial recovery 93% by 08-27
-                if in_event:
-                    # For days after rollback (>= RECOVERY_TIME date), partially recover
-                    if day >= RECOVERY_TIME.normalize():
-                        # linear recovery towards 0.93 by 08-27
-                        days_to_end = (EVENT_END.normalize() - RECOVERY_TIME.normalize()).days
-                        days_into_recovery = (day - RECOVERY_TIME.normalize()).days
-                        recovery_frac = np.clip(days_into_recovery / max(1, days_to_end), 0.0, 1.0)
-                        target_fpy_day = 0.89 + 0.04 * recovery_frac  # 0.89 up to ~0.93
-                        fpy = target_fpy_day
-                        retest_rate = 0.07 + 0.02 * (1.0 - recovery_frac)  # 7-9% then easing
-                    else:
-                        # Within 08-18..08-23 -> 88.1..89.0
-                        fpy = np.random.uniform(0.881, 0.890)
-                        retest_rate = np.random.uniform(0.07, 0.09)
-                elif day > EVENT_END.normalize() and day <= pd.Timestamp('2025-09-01'):
-                    # normalize back to ~95% by 09-01
-                    days_after = (day - EVENT_END.normalize()).days
-                    fpy = min(0.95, 0.93 + 0.02 * (days_after / max(1, (pd.Timestamp('2025-09-01') - EVENT_END.normalize()).days)))
-                    retest_rate = 0.04
+                # Equipment: during the incident AUS MX-7 is routed mostly to the re-carded testers
+                if site == 'AUS' and prod == 'MX-7' and in_event_day and np.random.rand() < 0.85:
+                    tester = np.random.choice(AFFECTED_TESTERS)
                 else:
-                    # baseline mild variation
-                    fpy = np.random.normal(FPY_BASE[(site, prod)], 0.002)
-                    retest_rate = RETEST_BASE[site]
+                    tester = np.random.choice(TESTERS[site])
+                if tester in AFFECTED_TESTERS:
+                    probe_card = AFFECTED_PROBE_CARD
+                else:
+                    probe_card = np.random.choice([pc for pc in PROBE_CARDS[site] if pc != AFFECTED_PROBE_CARD])
+                handler = np.random.choice(HANDLERS[site])
+                program = np.random.choice(program_versions, p=[0.35, 0.30, 0.25, 0.10])
 
-            else:
-                # Non-incident combos: mild noise
-                fpy = np.random.normal(fpy, 0.002)
-                retest_rate = np.random.normal(retest_rate, 0.003)
-                retest_rate = float(np.clip(retest_rate, 0.0, 0.06))
+                # Pattern + kill probability map
+                severity = incident_severity(start_ts) if (site == 'AUS' and prod == 'MX-7' and tester in AFFECTED_TESTERS) else 0.0
+                affected = severity > 0
+                if affected:
+                    pattern = 'Edge-Ring'
+                    amp = severity
+                else:
+                    pattern = np.random.choice(PATTERNS, p=BASELINE_PATTERN_MIX)
+                    amp = np.random.uniform(*PATTERN_AMPLITUDE[pattern]) if pattern in PATTERN_AMPLITUDE else 0.0
 
-            pass_first = np.random.rand(cnt) < fpy
-            retest_flag = np.random.rand(cnt) < retest_rate
+                p_random = max(0.005, np.random.normal(1.0 - fpy_base - PATTERN_LOSS_ALLOWANCE, 0.004))
+                if pattern == 'Random':
+                    p_random += np.random.uniform(0.05, 0.08)
+                shape = pattern_shape(pattern, x, y, r_norm, theta, DIE_GRID_RADIUS[prod])
+                p_pattern = amp * shape
 
-            # Hard/soft bin assignment: pass bins vs failure bins
-            hard_bin = np.empty(cnt, dtype=object)
-            soft_bin = np.empty(cnt, dtype=object)
+                killed_random = np.random.rand(n_dies) < p_random
+                killed_pattern = np.random.rand(n_dies) < p_pattern
+                fail = killed_random | killed_pattern
 
-            # Default baseline failure mix
-            mix = FAIL_MIX_BASE.copy()
-            # During event window at AUS/MX-7, amplify HB_021 by ~3.2x relative share
-            if site == 'AUS' and prod == 'MX-7' and in_event:
-                # reweight mix: bump HB_021
-                mix = FAIL_MIX_BASE.copy()
-                mix[1] = mix[1] * 3.2
-                mix = mix / mix.sum()
+                hard_bin = np.where(
+                    np.random.rand(n_dies) < 0.85, HARD_PASS_PRIMARY, HARD_PASS_SECOND
+                ).astype(object)
+                random_bins = np.random.choice(FAIL_BINS, size=n_dies, p=FAIL_MIX_BASE)
+                pattern_bin = PATTERN_BIN.get(pattern)
+                hard_bin[killed_random] = random_bins[killed_random]
+                if pattern_bin:
+                    # Most pattern kills carry the mechanism's bin; a few land in other bins
+                    pb = np.where(np.random.rand(n_dies) < 0.85, pattern_bin, random_bins)
+                    hard_bin[killed_pattern] = pb[killed_pattern]
+                soft_bin = np.array([SOFT_FOR_HARD.get(b, SOFT_PASS) for b in hard_bin], dtype=object)
 
-            fail_choice = np.random.choice(FAIL_BINS, size=cnt, p=mix)
-            soft_fail_choice = np.random.choice(SOFT_FAILS, size=cnt, p=mix)
+                # Retest: a share of failing dies is re-probed (contact fails much more often)
+                retest_share = RETEST_SHARE_BASE + 0.30 * min(1.0, severity / PEAK_SEVERITY)
+                retest_flag = fail & (np.random.rand(n_dies) < retest_share)
 
-            hard_bin[pass_first] = np.random.choice([HARD_PASS_PRIMARY, HARD_PASS_SECOND], size=pass_first.sum(), p=[0.85, 0.15])
-            soft_bin[pass_first] = SOFT_PASS
-            hard_bin[~pass_first] = fail_choice[~pass_first]
-            soft_bin[~pass_first] = soft_fail_choice[~pass_first]
+                # Probe timestamps: serpentine order, slower indexing on HF-3.2.1 handlers
+                index_s = INDEX_TIME_S[prod] * (1.25 if affected and start_ts < RECOVERY_TIME else 1.0)
+                offsets = np.cumsum(np.random.normal(index_s, 0.3, size=n_dies).clip(1.0))
+                ts = start_ts + pd.to_timedelta(offsets, unit='s')
 
-            # Part_id components: X/Y index
-            xi = np.random.randint(0, 300, size=cnt)
-            yi = np.random.randint(0, 300, size=cnt)
+                prefix = prod.replace('-', '')
+                xy = np.char.add(np.char.add('X', np.char.zfill(x.astype(str), 3)),
+                                 np.char.add('Y', np.char.zfill(y.astype(str), 3)))
+                part_ids = np.char.add(f'{prefix}-{wafer_id}-', xy)
+                part_ids = np.where(retest_flag, np.char.add(part_ids, '-R2'), part_ids).astype(object)
 
-            # Attempt number: introduce a small fraction with retest attempts (>1)
-            attempt_num = np.ones(cnt, dtype=int)
-            retry_mask = (retest_flag) & (~pass_first)
-            if retry_mask.any():
-                attempt_num[retry_mask] = 2
+                prr_chunks.append(pd.DataFrame({
+                    'part_id': part_ids,
+                    'site': site,
+                    'tester_id': tester,
+                    'wafer_id': wafer_id,
+                    'lot_id': lot_id,
+                    'foundry': fnd,
+                    'product': prod,
+                    'timestamp': ts,
+                    'x_coord': x.astype(int),
+                    'y_coord': y.astype(int),
+                    'soft_bin': soft_bin,
+                    'hard_bin': hard_bin,
+                    'pass_flag': ~fail,
+                    'retest_flag': retest_flag,
+                    'program_version': program,
+                    'probe_card_id': probe_card,
+                    'handler_id': handler,
+                    '_r_norm': r_norm,
+                    '_affected': affected,
+                    '_severity': severity,
+                }))
+                truth_rows.append({
+                    'wafer_id': wafer_id,
+                    'site': site,
+                    'product': prod,
+                    'tester_id': tester,
+                    'start_ts': start_ts,
+                    'injected_pattern': pattern,
+                    'amplitude': amp,
+                    'affected': affected,
+                })
+                lot_rows.append({
+                    'lot_id': lot_id,
+                    'wafer_id': wafer_id,
+                    'product': prod,
+                    'foundry': fnd,
+                    'dies_per_wafer_expected': n_dies,
+                    'start_date': lot_start.floor('ms'),
+                    'site_planned': site,
+                })
 
-            # Vectorized part_id construction for speed while preserving exact formatting
-            prefix = prod.replace('-', '')
-            # Precompute constant strings for vectorized concatenation
-            w_ids = wafers_pick.astype(str)
-            x_str = np.char.add('X', np.char.zfill(xi.astype(str), 3))
-            y_str = np.char.add('Y', np.char.zfill(yi.astype(str), 3))
-            base = np.char.add(np.char.add(np.char.add(prefix + '-', w_ids), '-'), np.char.add(x_str, y_str))
-            # attempt suffix only when attempt > 1
-            attempt_suffix = np.where(attempt_num == 1, '', np.char.add('-R', attempt_num.astype(str)))
-            part_ids = np.char.add(base, attempt_suffix)
-            part_ids = part_ids.astype(object)
-
-            lot_ids = wafer_to_lot.loc[wafers_pick].values
-            foundry = wafer_to_foundry.loc[wafers_pick].values
-
-            df_chunk = pd.DataFrame({
-                'part_id': part_ids,
-                'site': site,
-                'tester_id': testers_pick,
-                'wafer_id': wafers_pick,
-                'lot_id': lot_ids,
-                'foundry': foundry,
-                'product': prod,
-                'timestamp': ts,
-                'soft_bin': soft_bin,
-                'hard_bin': hard_bin,
-                'pass_flag': pass_first.astype(bool),
-                'retest_flag': retest_flag.astype(bool),
-                'program_version': program_vers,
-                'probe_card_id': probe_card_ids,
-                'handler_id': handler_ids,
-            })
-            rows.append(df_chunk)
-
-    prr = pd.concat(rows, ignore_index=True)
-
-    # Final normalization of datetime (no tz ops to avoid overhead; timestamps are naive already)
+    prr = pd.concat(prr_chunks, ignore_index=True)
     prr['timestamp'] = pd.to_datetime(prr['timestamp'], errors='coerce').dt.floor('ms')
+    lot_df = pd.DataFrame(lot_rows)
+    lot_df['start_date'] = pd.to_datetime(lot_df['start_date'], errors='coerce').dt.floor('ms')
+    truth = pd.DataFrame(truth_rows)
+    print(f'lot_wafer_master rows: {len(lot_df):,} | stdf_prr_parts rows: {len(prr):,}')
+    return lot_df, prr, truth
 
-    # Shuffle and down/up sample to target row count (approx)
-    prr = prr.sample(frac=1.0, random_state=SEED).reset_index(drop=True)
-    if len(prr) > target_rows:
-        prr = prr.iloc[:target_rows].copy()
-    elif len(prr) < target_rows:
-        # pad by sampling additional rows from existing days (safe for raw)
-        extra = prr.sample(n=(target_rows - len(prr)), replace=True, random_state=SEED)
-        prr = pd.concat([prr, extra], ignore_index=True)
 
-    print(f'stdf_prr_parts rows: {len(prr):,}')
-    return prr
+# ===============================
+# === WAFER REVIEW LABELS
+# ===============================
+
+def generate_wafer_review_labels(truth: pd.DataFrame, sample_frac: float = 0.4) -> pd.DataFrame:
+    """Yield-engineer visual review labels for a sample of wafers (ground truth for classifier QA)."""
+    print('Generating wafer_review_labels...')
+    reviewers = [fake.unique.first_name() + ' ' + fake.last_name() for _ in range(6)]
+    # Engineers always review the incident wafers; the rest is a random sample
+    sample = truth[truth['affected'] | (np.random.rand(len(truth)) < sample_frac)].copy()
+    labels = pd.DataFrame({
+        'wafer_id': sample['wafer_id'].values,
+        'reviewed_pattern': np.where(
+            sample['affected'] & (sample['amplitude'] < VISIBLE_AMPLITUDE), 'None', sample['injected_pattern']),
+        'reviewer': np.random.choice(reviewers, size=len(sample)),
+        'review_time': (pd.to_datetime(sample['start_ts']) + pd.to_timedelta(
+            np.random.randint(2, 48, size=len(sample)), unit='h')).dt.floor('ms').values,
+    })
+    print(f'wafer_review_labels rows: {len(labels):,}')
+    return labels
 
 
 # ===============================
@@ -434,7 +478,7 @@ def generate_stdf_ptr_params(prr: pd.DataFrame, target_rows: int = 487_320) -> p
     print('Generating stdf_ptr_params...')
 
     # Select a subset of PRR attempts for parameters (to avoid exploding rows)
-    base_parts = prr[['part_id', 'site', 'product', 'wafer_id', 'timestamp']].copy()
+    base_parts = prr[['part_id', 'site', 'product', 'wafer_id', 'timestamp', '_r_norm', '_affected', '_severity']].copy()
 
     # Weight MX-7 parts higher to ensure visibility
     mx7_mask = base_parts['product'] == 'MX-7'
@@ -449,13 +493,12 @@ def generate_stdf_ptr_params(prr: pd.DataFrame, target_rows: int = 487_320) -> p
     # Build param rows per selected part
     rows = []
     n_parts = len(parts_sel)
-    ts = pd.to_datetime(parts_sel['timestamp'], errors='coerce').dt.floor('ms')
-    # Ensure tz-naive alignment before comparisons
-    ts = ts.dt.tz_localize(None)
-    ts_norm = ts.dt.normalize()
-    in_event_mask = (ts_norm >= EVENT_START.normalize()) & (ts_norm <= EVENT_END.normalize())
-    aus_mx7_mask = (parts_sel['site'] == 'AUS') & (parts_sel['product'] == 'MX-7')
-    event_mask_global = in_event_mask & aus_mx7_mask
+    # Incident dies: AUS MX-7 wafers probed on the re-carded testers (PC-AUS-447 Rev C)
+    event_mask_global = parts_sel['_affected'].astype(bool)
+    # Contact-resistance shift is strongest at the wafer edge (probe card planarity)
+    edge_weight = np.clip((parts_sel['_r_norm'].values - 0.7) / 0.3, 0.0, 1.0)
+    # Scale with incident severity so drift eases after the 2025-08-24 rollback
+    severity_weight = np.clip(parts_sel['_severity'].values / PEAK_SEVERITY, 0.0, 1.0)
     progress_interval = max(1, len(PARAMS) // 2)
 
     # Baseline distributions
@@ -480,24 +523,22 @@ def generate_stdf_ptr_params(prr: pd.DataFrame, target_rows: int = 487_320) -> p
 
     # Generate per parameter
     for j, pcode in enumerate(PARAMS):
-        vals = []
-        # Event shift mask: AUS + MX-7 + in event window
-        # use precomputed event_mask_global for reproducibility and performance
+        # Event shift mask: incident dies (see event_mask_global)
         event_mask = event_mask_global
 
         n = n_parts
         if pcode == 'PT_0210':
             base = np.random.lognormal(mean=np.log(CR_mean), sigma=CR_sigma, size=n)
-            # shift by +2.4 sigma on event
-            shift = 2.4 * CR_sigma
-            base[event_mask.values] += shift
+            # shift by up to +2.4 sigma on event, scaled toward the wafer edge
+            shift = 2.4 * CR_sigma * (0.4 + 0.6 * edge_weight) * severity_weight
+            base[event_mask.values] += shift[event_mask.values]
             value = base
             lsl = np.full(n, np.nan)
             usl = np.full(n, CR_usl)
         elif pcode == 'PT_0217':
             base = np.random.lognormal(mean=np.log(IDDQ_mean), sigma=IDDQ_sigma, size=n)
             # small tails increase during event (correlated with contact issues)
-            base[event_mask.values] *= np.random.uniform(1.05, 1.15, size=event_mask.sum())
+            base[event_mask.values] *= 1.0 + np.random.uniform(0.05, 0.15, size=event_mask.sum()) * severity_weight[event_mask.values]
             value = base
             lsl = np.full(n, np.nan)
             usl = np.full(n, IDDQ_usl)
@@ -639,22 +680,23 @@ def generate_equip_change_log() -> pd.DataFrame:
     return change_df
 
 
+
+
 # ===============================
 # === QUICK QA SUMMARIES
 # ===============================
 
-def print_qa_summaries(prr: pd.DataFrame, ptr: pd.DataFrame, change_df: pd.DataFrame):
+def print_qa_summaries(prr: pd.DataFrame, ptr: pd.DataFrame, change_df: pd.DataFrame, truth: pd.DataFrame):
     print('\nQuality checks:')
     # AUS MX-7 FPY before vs during event
-    prr['date'] = pd.to_datetime(prr['timestamp'], errors='coerce').dt.tz_localize(None).dt.floor('ms').dt.normalize()
-    aus_mx7 = prr[(prr['site'] == 'AUS') & (prr['product'] == 'MX-7')]
-    pre = aus_mx7[aus_mx7['date'] < EVENT_START.normalize()]
-    during = aus_mx7[(aus_mx7['date'] >= EVENT_START.normalize()) & (aus_mx7['date'] <= EVENT_END.normalize())]
-    post = aus_mx7[(aus_mx7['date'] > EVENT_END.normalize()) & (aus_mx7['date'] <= pd.Timestamp('2025-09-01'))]
-    fpy_pre = float(pre['pass_flag'].mean()) if len(pre) else np.nan
-    fpy_dur = float(during['pass_flag'].mean()) if len(during) else np.nan
-    fpy_post = float(post['pass_flag'].mean()) if len(post) else np.nan
-    print(f"  AUS MX-7 FPY pre-event ~ {fpy_pre*100:.2f}% | during ~ {fpy_dur*100:.2f}% | post ~ {fpy_post*100:.2f}%")
+    date = pd.to_datetime(prr['timestamp']).dt.normalize()
+    aus_mx7 = (prr['site'] == 'AUS') & (prr['product'] == 'MX-7')
+    pre = prr[aus_mx7 & (date < EVENT_START.normalize())]
+    during = prr[aus_mx7 & (date >= EVENT_START.normalize()) & (date <= EVENT_END.normalize())]
+    post = prr[aus_mx7 & (date > EVENT_END.normalize()) & (date <= pd.Timestamp('2025-09-01'))]
+    fpy = lambda df: float((df['pass_flag'] & ~df['retest_flag']).mean()) * 100 if len(df) else np.nan
+    print(f"  AUS MX-7 FPY pre-event ~ {fpy(pre):.2f}% | during ~ {fpy(during):.2f}% | post ~ {fpy(post):.2f}%")
+    print(f"  All-site FPY ~ {fpy(prr):.2f}%")
 
     # HB_021 surge
     hb_pre = pre['hard_bin'].value_counts(normalize=True).get('HB_021', 0.0)
@@ -662,14 +704,13 @@ def print_qa_summaries(prr: pd.DataFrame, ptr: pd.DataFrame, change_df: pd.DataF
     print(f"  HB_021 share pre {hb_pre*100:.2f}% -> during {hb_dur*100:.2f}% (expected surge)")
 
     # Retest rate
-    rr_pre = float(pre['retest_flag'].mean()) if len(pre) else np.nan
-    rr_dur = float(during['retest_flag'].mean()) if len(during) else np.nan
-    print(f"  Retest rate pre ~ {rr_pre*100:.2f}% -> during ~ {rr_dur*100:.2f}%")
+    print(f"  Retest rate pre ~ {pre['retest_flag'].mean()*100:.2f}% -> during ~ {during['retest_flag'].mean()*100:.2f}%")
 
     # Param PT_0210 mean shift at AUS/MX-7 during event
-    ptr['date'] = pd.to_datetime(ptr['timestamp'], errors='coerce').dt.tz_localize(None).dt.floor('ms').dt.normalize()
-    m_pre = ptr[(ptr['site'] == 'AUS') & (ptr['product'] == 'MX-7') & (ptr['param_code'] == 'PT_0210') & (ptr['date'] < EVENT_START.normalize())]['value'].mean()
-    m_dur = ptr[(ptr['site'] == 'AUS') & (ptr['product'] == 'MX-7') & (ptr['param_code'] == 'PT_0210') & (ptr['date'] >= EVENT_START.normalize()) & (ptr['date'] <= EVENT_END.normalize())]['value'].mean()
+    cr = ptr[(ptr['site'] == 'AUS') & (ptr['product'] == 'MX-7') & (ptr['param_code'] == 'PT_0210')]
+    pdate = pd.to_datetime(cr['timestamp']).dt.normalize()
+    m_pre = cr[pdate < EVENT_START.normalize()]['value'].mean()
+    m_dur = cr[(pdate >= EVENT_START.normalize()) & (pdate <= EVENT_END.normalize())]['value'].mean()
     print(f"  PT_0210 mean pre {m_pre:.2f} -> during {m_dur:.2f} (contact resistance shift)")
 
     # Change log key entries
@@ -677,27 +718,38 @@ def print_qa_summaries(prr: pd.DataFrame, ptr: pd.DataFrame, change_df: pd.DataF
     rollback = change_df[(change_df['change_time'] == RECOVERY_TIME) & (change_df['site'] == 'AUS')]
     print(f"  Change log onset entries: {len(onset):,} | rollback entries: {len(rollback):,}")
 
+    # Wafer patterns
+    print(f"  Wafers: {len(truth):,} | incident wafers: {int(truth['affected'].sum()):,}")
+    print('  Injected pattern mix: ' + ', '.join(
+        f'{k}={v}' for k, v in truth['injected_pattern'].value_counts().items()))
+
 
 # ===============================
 # === MAIN
 # ===============================
 if __name__ == '__main__':
-    print('Starting KARI Semiconductor STDF data generation...')
+    args = parse_args()
+    if not args.local:
+        os.environ['CATALOG'] = args.catalog
+        os.environ['SCHEMA'] = args.schema
+        os.environ['VOLUME'] = args.volume
+
+    print('Starting STDF wafer-sort data generation...')
     print('-' * 60)
 
-    lot_master = generate_lot_wafer_master()
-    save_to_parquet(lot_master, 'stdf_raw_lot_wafer_master', num_files=2)
-
-    prr = generate_stdf_prr_parts(lot_master, target_rows=326_450)
-    save_to_parquet(prr, 'stdf_raw_prr_parts', num_files=8)
-
+    lot_master, prr, truth = generate_wafer_sort()
     ptr = generate_stdf_ptr_params(prr, target_rows=487_320)
-    save_to_parquet(ptr, 'stdf_raw_ptr_params', num_files=10)
-
     change_log = generate_equip_change_log()
-    save_to_parquet(change_log, 'stdf_raw_equip_change_log', num_files=1)
+    labels = generate_wafer_review_labels(truth)
 
-    print_qa_summaries(prr, ptr, change_log)
+    print_qa_summaries(prr, ptr, change_log, truth)
+
+    prr = prr.drop(columns=['_r_norm', '_affected', '_severity'])
+    save_to_parquet(lot_master, 'stdf_raw_lot_wafer_master', num_files=2)
+    save_to_parquet(prr, 'stdf_raw_prr_parts', num_files=8)
+    save_to_parquet(ptr, 'stdf_raw_ptr_params', num_files=10)
+    save_to_parquet(change_log, 'stdf_raw_equip_change_log', num_files=1)
+    save_to_parquet(labels, 'stdf_raw_wafer_review_labels', num_files=1)
 
     print('\n' + '=' * 60)
     print('GENERATION COMPLETE - Raw STDF datasets saved. All timestamps are naive, floored to ms.')

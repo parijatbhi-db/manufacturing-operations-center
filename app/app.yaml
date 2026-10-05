@@ -12,9 +12,9 @@ env:
   - name: 'SUPERVISOR_AGENT_TILE_ID'
     value: '40863b57-1699-430c-8335-ee6db4a0c691'
   - name: 'KNOWLEDGE_ASSISTANT_TILE_ID'
-    value: '5578ac04-9888-47c0-8b14-ba483a0e0259'
+    value: 'b49c04e7-8a4b-4c5e-b7a9-6422165f5516'
   - name: 'KNOWLEDGE_ASSISTANT_ENDPOINT'
-    value: 'ka-5578ac04-endpoint'
+    value: 'ka-b49c04e7-endpoint'
   - name: 'WORKSPACE_ORG_ID'
     value: '1444828305810485'
 

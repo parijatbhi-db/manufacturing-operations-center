@@ -1,15 +1,20 @@
 bundle:
   name: parijat_semi_stdf
+include:
+- resources/*.yml
 variables:
   project_name:
     description: AI Demo Generator Project
     default: semi_stdf
-  warehouse_name:
-    description: Name of the SQL warehouse to use
-    default: Shared Unity Catalog Serverless
-  warehouse_id:
-    lookup:
-      warehouse: ${var.warehouse_name}
+  catalog:
+    description: Unity Catalog catalog for all STDF pipeline outputs
+    default: parijat_demos
+  schema:
+    description: Schema that the STDF pipeline owns end to end (raw, silver, gold, metric views, KA docs)
+    default: mfg_ops
+  volume:
+    description: Volume for raw parquet and Knowledge Assistant docs
+    default: raw_data
   environment:
     description: Deployment environment
     default: dev
@@ -24,9 +29,9 @@ sync:
   - utils.py
   - generate_data.py
   - transformations.sql
+  - export_kb_docs.py
+  - redeploy_agents.py
   - dashboard_test_quality_ops.lvdash.json
-  - deploy_resources.py
-  - bricks_conf.json
 targets:
   dev:
     default: true
@@ -34,6 +39,28 @@ targets:
     workspace:
       root_path: ${var.workspace_path}/.bundle/${bundle.name}
 resources:
+  schemas:
+    mfg_ops:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: STDF wafer-sort / final-test pipeline outputs (raw, silver, gold, wafer-map patterns, metric views). Owned by the parijat_semi_stdf bundle.
+  volumes:
+    mfg_ops_raw_data:
+      name: ${var.volume}
+      catalog_name: ${var.catalog}
+      schema_name: ${resources.schemas.mfg_ops.name}
+      volume_type: MANAGED
+      comment: Raw STDF parquet and regenerated Knowledge Assistant docs
+  sql_warehouses:
+    mfg_ops_wh:
+      name: parijat-mfg-ops
+      cluster_size: 2X-Small
+      min_num_clusters: 1
+      max_num_clusters: 2
+      auto_stop_mins: 10
+      enable_serverless_compute: true
+      enable_photon: true
+      warehouse_type: PRO
   jobs:
     demo_workflow:
       name: '[DEMOGEN] - ${var.project_name} - Data Generation and Transformation'
@@ -42,6 +69,13 @@ resources:
         spark_python_task:
           python_file: ./generate_data.py
           source: WORKSPACE
+          parameters:
+          - --catalog
+          - ${var.catalog}
+          - --schema
+          - ${resources.schemas.mfg_ops.name}
+          - --volume
+          - ${resources.volumes.mfg_ops_raw_data.name}
         environment_key: default
         max_retries: 1
       - task_key: sql_transformations
@@ -50,15 +84,38 @@ resources:
         sql_task:
           file:
             path: ./transformations.sql
-          warehouse_id: ${var.warehouse_id}
+          warehouse_id: ${resources.sql_warehouses.mfg_ops_wh.id}
+          parameters:
+            catalog: ${var.catalog}
+            schema: ${resources.schemas.mfg_ops.name}
         max_retries: 1
-      - task_key: deploy_agent_bricks
+      - task_key: export_kb_docs
         depends_on:
         - task_key: sql_transformations
         spark_python_task:
-          python_file: ./deploy_resources.py
+          python_file: ./export_kb_docs.py
           source: WORKSPACE
+          parameters:
+          - --catalog
+          - ${var.catalog}
+          - --schema
+          - ${resources.schemas.mfg_ops.name}
+          - --volume
+          - ${resources.volumes.mfg_ops_raw_data.name}
         environment_key: default
+        max_retries: 1
+      - task_key: sync_agent_bricks
+        depends_on:
+        - task_key: export_kb_docs
+        spark_python_task:
+          python_file: ./redeploy_agents.py
+          source: WORKSPACE
+          parameters:
+          - --docs-path
+          - /Volumes/${var.catalog}/${resources.schemas.mfg_ops.name}/${resources.volumes.mfg_ops_raw_data.name}/docs
+          - --genie-space-id
+          - ${resources.genie_spaces.stdf_genie.id}
+        environment_key: agents
         max_retries: 1
       environments:
       - environment_key: default
@@ -67,16 +124,14 @@ resources:
           dependencies:
           - faker>=19.0.0
           - holidays>=0.35
-          - databricks-sdk>=0.18.0
-  volumes:
-    raw_data_volume:
-      name: raw_data
-      catalog_name: parijat_demos
-      schema_name: manufacturing
-      volume_type: MANAGED
-      comment: Volume for semiconductor STDF raw data and artifacts
+      - environment_key: agents
+        spec:
+          client: '3'
+          dependencies:
+          - databricks-sdk>=0.55.0
   dashboards:
     test_quality_ops:
-      display_name: ${var.project_name} - Semiconductor Test Quality and Throughput
+      display_name: Semiconductor Test Quality and Throughput
       file_path: ./dashboard_test_quality_ops.lvdash.json
-      warehouse_id: ${var.warehouse_id}
+      warehouse_id: ${resources.sql_warehouses.mfg_ops_wh.id}
+      embed_credentials: false

@@ -38,14 +38,15 @@ databricks bundle deploy --force-lock -p DEFAULT
 databricks bundle run demo_workflow -p DEFAULT
 ```
 
-This will:
-1. Create the `parijat_demos.manufacturing` schema + `raw_data` volume in Unity Catalog
-2. Generate synthetic STDF data via Faker
-3. Run bronze → silver → gold transformations (`transformations.sql`)
-4. Deploy the Lakeview dashboard
-5. (If `bricks_conf.json` includes `knowledge_assistant` / `multi_agent_supervisor` blocks) deploy the agents via `deploy_resources.py`
+The bundle owns `parijat_demos.mfg_ops` end to end — it is the single source of truth for every downstream asset. The job runs:
+1. `generate_data` — synthetic STDF wafer-sort sessions (complete die maps per wafer, with injected spatial patterns) → raw tables + parquet in the `raw_data` volume
+2. `sql_transformations` — silver → gold (`transformations.sql`), wafer-map pattern classification (`gold_wafer_patterns`), and the `mv_stdf_*` metric views used by Genie
+3. `export_kb_docs` — regenerates the KA corpus (data dictionary + gold CSVs) in `/Volumes/parijat_demos/mfg_ops/raw_data/docs`
+4. `sync_agent_bricks` — points the KA at that docs folder, re-syncs it, and creates the MAS if missing (`redeploy_agents.py`)
 
-The `redeploy_agents.py` script is a standalone fallback to redeploy just the KA + MAS without re-running the data pipeline. Submit it as a one-off Databricks job task with `databricks-sdk>=0.106.0` in the env spec.
+The bundle also deploys the schema, volume, SQL warehouse (`parijat-mfg-ops`), Lakeview dashboard (incl. the **Wafer Map Patterns** page) and the Genie space (`src/stdf_genie.geniespace.json`). It uses the direct deployment engine.
+
+**Fresh workspace bootstrap:** the Genie space can't be created until the metric views exist, so on the very first deploy replace `${resources.genie_spaces.stdf_genie.id}` in `databricks.yml` with a placeholder, comment out `include: resources/*.yml`, deploy + run the job, then restore both and deploy again.
 
 ### 2. App
 

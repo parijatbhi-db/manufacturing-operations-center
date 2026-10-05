@@ -1,0 +1,8 @@
+resources:
+  genie_spaces:
+    stdf_genie:
+      title: "STDF Semiconductor Test Quality Analytics"
+      warehouse_id: ${resources.sql_warehouses.mfg_ops_wh.id}
+      file_path: ../src/stdf_genie.geniespace.json
+      description: Interactive analytics space for KARI Semiconductor STDF data. Powered by metric views with pre-defined measures and dimensions for yield, bins, parametric drift, throughput, equipment changes, business impact, and wafer-map patterns.
+      parent_path: /Workspace/Users/parijat.bhide@databricks.com
