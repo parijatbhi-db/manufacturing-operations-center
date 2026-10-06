@@ -1,6 +1,6 @@
 // Wafer Operations (Lakebase) and Data Pipeline (Lakeflow Job) routes.
 
-import { ensureSchema, getServicePrincipalToken, lakebaseConfigured, query } from './lakebase.js';
+import { ensureSchema, getServicePrincipalToken, lakebaseConfigured, missingLakebaseEnv, query } from './lakebase.js';
 
 const SYNCED_SCHEMA = process.env.LAKEBASE_SYNCED_SCHEMA || 'mfg_ops';
 const REFRESH_JOB_ID = process.env.REFRESH_JOB_ID;
@@ -22,10 +22,14 @@ const patterns = `"${SYNCED_SCHEMA}".lb_wafer_patterns`;
 const dies = `"${SYNCED_SCHEMA}".lb_wafer_map_dies`;
 
 export function registerOpsRoutes(app, getUserInfo) {
+  const missing = missingLakebaseEnv();
+  console.log(missing.length
+    ? `[lakebase] not configured, missing env: ${missing.join(', ')}`
+    : `[lakebase] endpoint ${process.env.LAKEBASE_ENDPOINT} host ${process.env.PGHOST} db ${process.env.PGDATABASE}`);
   let schemaReady = null;
   const ready = () => {
     if (!lakebaseConfigured()) {
-      const e = new Error('Lakebase is not attached to this app');
+      const e = new Error(`Lakebase is not configured for this app (missing env: ${missingLakebaseEnv().join(', ')})`);
       e.status = 503;
       throw e;
     }

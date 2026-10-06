@@ -17,6 +17,10 @@ env:
     value: 'ka-b49c04e7-endpoint'
   - name: 'REFRESH_JOB_ID'
     valueFrom: 'refresh-job'
+  # PGHOST/PGPORT/PGDATABASE/PGUSER/PGSSLMODE are auto-injected by the 'lakebase' (postgres)
+  # resource; the endpoint path is not, so it must be declared explicitly.
+  - name: 'LAKEBASE_ENDPOINT'
+    valueFrom: 'lakebase'
   - name: 'LAKEBASE_SYNCED_SCHEMA'
     value: 'mfg_ops'
   - name: 'WORKSPACE_ORG_ID'

@@ -383,6 +383,7 @@ The Genie API rejects tables that don't exist yet, so the first deploy needs two
 - **Deployment engine:** the bundle uses the **direct** engine, because the Terraform engine can't manage Genie spaces.
 - **Lakeflow pipeline ownership:** the pipeline must own the `raw_stdf_*` tables. If they were created another way, drop them before the first pipeline update.
 - **Lakebase Postgres driver:** job tasks use `pg8000` (pure Python). `psycopg[binary]` aborted with SIGABRT on serverless job compute.
+- **`LAKEBASE_ENDPOINT` is not auto-injected:** the `postgres` resource auto-injects `PG*` variables only. Declare `LAKEBASE_ENDPOINT` in `app.yaml` with `valueFrom: 'lakebase'` (the resource name), or the app reports Lakebase as not configured.
 - **App and Lakebase order:** deploy the app *after* attaching the `lakebase` resource and *before* it first connects, so its service principal creates and owns `wafer_ops`. The SP needs `refresh_lakebase` to have run (or a manual grant) before it can read `mfg_ops.lb_*`.
 
 ---

@@ -52,8 +52,15 @@ async function getDatabaseCredential() {
   return dbCredential.value;
 }
 
+const REQUIRED_ENV = ['PGHOST', 'PGDATABASE', 'PGUSER', 'LAKEBASE_ENDPOINT'];
+
+// Names of required Lakebase env vars that are not set (empty when fully configured)
+export function missingLakebaseEnv() {
+  return REQUIRED_ENV.filter((k) => !process.env[k]);
+}
+
 export function lakebaseConfigured() {
-  return Boolean(process.env.PGHOST && process.env.LAKEBASE_ENDPOINT);
+  return missingLakebaseEnv().length === 0;
 }
 
 let pool = null;
