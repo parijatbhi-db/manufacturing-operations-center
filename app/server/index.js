@@ -1,10 +1,12 @@
 // Manufacturing Operations Center — Express backend
-// Proxies authenticated calls to Genie API and the Mosaic AI Agent serving endpoint.
+// Proxies authenticated calls to Genie API and the Mosaic AI Agent serving endpoint,
+// and serves the Wafer Operations desk from Lakebase.
 // Uses on-behalf-of-user (OBO) tokens forwarded by Databricks Apps via X-Forwarded-Access-Token.
 
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { registerOpsRoutes } from './ops.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8000;
@@ -199,6 +201,9 @@ app.post('/api/agent/chat', async (req, res) => {
     res.json({ text, raw: out });
   } catch (e) { sendError(res, e); }
 });
+
+// ---------- Wafer Operations (Lakebase) + Data Pipeline (Lakeflow Job) ----------
+registerOpsRoutes(app, getUserInfo);
 
 // ---------- Static frontend ----------
 const clientDist = path.join(__dirname, '..', 'client', 'dist');

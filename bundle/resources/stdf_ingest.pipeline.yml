@@ -1,0 +1,14 @@
+resources:
+  pipelines:
+    stdf_ingest:
+      name: '[mfg_ops] STDF raw ingestion (Lakeflow)'
+      catalog: ${var.catalog}
+      schema: ${resources.schemas.mfg_ops.name}
+      serverless: true
+      photon: true
+      continuous: false
+      configuration:
+        stdf.raw_path: /Volumes/${var.catalog}/${resources.schemas.mfg_ops.name}/${resources.volumes.mfg_ops_raw_data.name}
+      libraries:
+      - file:
+          path: ../pipelines/stdf_ingest.sql

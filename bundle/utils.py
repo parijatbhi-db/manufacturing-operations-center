@@ -118,7 +118,8 @@ def save_to_parquet(df: pd.DataFrame, table_name: str, num_files: int = 5) -> No
     # Write to local filesystem
     outdir = f'data/{table_name}'
 
-  # Create directory (works for both Volumes and local filesystem)
+  # Start from an empty directory so each run publishes exactly one consistent dataset
+  shutil.rmtree(outdir, ignore_errors=True)
   os.makedirs(outdir, exist_ok=True)
 
   engine, engine_kwargs = _choose_engine_kwargs()
@@ -144,24 +145,5 @@ def save_to_parquet(df: pd.DataFrame, table_name: str, num_files: int = 5) -> No
     msg = 'TIMESTAMP_MILLIS' if use_parquet_ts else 'ISO8601 strings'
     print(f'✓ Saved {n:,} rows to {outdir}/ ({part} files) [{location}] — datetimes as {msg}')
 
-  # If writing to Databricks Volumes, create Delta table from parquet files
-  if catalog and schema and volume:
-    try:
-      from pyspark.sql import SparkSession
-      spark = SparkSession.builder.getOrCreate()
-
-      # Create Delta table using read_files
-      create_table_sql = f"""
-        CREATE OR REPLACE TABLE {catalog}.{schema}.{table_name}
-        COMMENT 'Raw data table generated from parquet files'
-        AS SELECT *
-        FROM read_files('{outdir}', format => 'parquet', pathGlobFilter => '*.parquet')
-      """
-
-      print(f"Creating Delta table: {catalog}.{schema}.{table_name}")
-      spark.sql(create_table_sql)
-      print(f"✓ Delta table {catalog}.{schema}.{table_name} created successfully")
-
-    except Exception as e:
-      print(f"Warning: Could not create Delta table: {e}")
-      print("Parquet files are still available in the volume.")
+  # The Lakeflow ingest pipeline (pipelines/stdf_ingest.sql) owns the raw_* tables and
+  # streams these files in with Auto Loader, so only the parquet files are written here.

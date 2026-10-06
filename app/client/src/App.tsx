@@ -3,9 +3,11 @@ import { AppConfig, getConfig } from './lib/api';
 import DashboardView from './components/DashboardView';
 import GenieView from './components/GenieView';
 import AgentView from './components/AgentView';
-import { IconAgent, IconDashboard, IconFactory, IconGenie } from './components/Icons';
+import OpsView from './components/OpsView';
+import PipelineView from './components/PipelineView';
+import { IconAgent, IconDashboard, IconFactory, IconGenie, IconPipeline, IconWafer } from './components/Icons';
 
-type Tab = 'dashboard' | 'genie' | 'agent';
+type Tab = 'dashboard' | 'ops' | 'genie' | 'agent' | 'pipeline';
 
 function initials(name: string): string {
   if (!name) return '??';
@@ -75,6 +77,12 @@ export default function App() {
             <span className="nav-icon"><IconDashboard /></span>Dashboard
           </button>
           <button
+            className={`nav-item ${tab === 'ops' ? 'active' : ''}`}
+            onClick={() => setTab('ops')}
+          >
+            <span className="nav-icon"><IconWafer /></span>Wafer Operations
+          </button>
+          <button
             className={`nav-item ${tab === 'genie' ? 'active' : ''}`}
             onClick={() => setTab('genie')}
           >
@@ -85,6 +93,13 @@ export default function App() {
             onClick={() => setTab('agent')}
           >
             <span className="nav-icon"><IconAgent /></span>Supervisor Agent
+          </button>
+          <div className="sidebar-section-label">Platform</div>
+          <button
+            className={`nav-item ${tab === 'pipeline' ? 'active' : ''}`}
+            onClick={() => setTab('pipeline')}
+          >
+            <span className="nav-icon"><IconPipeline /></span>Data Pipeline
           </button>
           <div className="sidebar-footer">
             Powered by Databricks · {config.workspace.host.replace('https://', '')}
@@ -97,11 +112,17 @@ export default function App() {
           <div style={{ display: tab === 'dashboard' ? 'contents' : 'none' }}>
             <DashboardView config={config} />
           </div>
+          <div style={{ display: tab === 'ops' ? 'contents' : 'none' }}>
+            <OpsView />
+          </div>
           <div style={{ display: tab === 'genie' ? 'contents' : 'none' }}>
             <GenieView config={config} />
           </div>
           <div style={{ display: tab === 'agent' ? 'contents' : 'none' }}>
             <AgentView config={config} />
+          </div>
+          <div style={{ display: tab === 'pipeline' ? 'contents' : 'none' }}>
+            <PipelineView />
           </div>
         </main>
       </div>

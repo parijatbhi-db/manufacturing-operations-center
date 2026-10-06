@@ -15,6 +15,10 @@ env:
     value: 'b49c04e7-8a4b-4c5e-b7a9-6422165f5516'
   - name: 'KNOWLEDGE_ASSISTANT_ENDPOINT'
     value: 'ka-b49c04e7-endpoint'
+  - name: 'REFRESH_JOB_ID'
+    valueFrom: 'refresh-job'
+  - name: 'LAKEBASE_SYNCED_SCHEMA'
+    value: 'mfg_ops'
   - name: 'WORKSPACE_ORG_ID'
     value: '1444828305810485'
 
@@ -30,6 +34,16 @@ env:
 #   key: genie-space
 #   id: 01f1403396011f339af2cb207b69e9b6
 #   permission: CAN_RUN
+#
+# Resource: Lakebase (postgres) — injects PGHOST/PGDATABASE/PGUSER/LAKEBASE_ENDPOINT
+#   key: lakebase
+#   branch: projects/parijat-mfg-ops/branches/production
+#   permission: CAN_CONNECT_AND_CREATE
+#
+# Resource: Job (data refresh)
+#   key: refresh-job
+#   id: 848871296768056
+#   permission: CAN_MANAGE_RUN
 #
 # Resource: Model Serving Endpoint (supervisor agent)
 #   key: serving-endpoint

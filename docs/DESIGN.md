@@ -3,7 +3,7 @@
 **Owner:** Parijat Bhide (Sr. SA, MFG Tech West)
 **Workspace:** `e2-demo-field-eng` (CLI profile `e2-demo-fe`)
 **Repo:** `parijatbhi-db/manufacturing-operations-center` (`bundle/` and `app/`)
-**Status:** Live demo, last rebuilt 2026-10-05
+**Status:** Live demo, last rebuilt 2026-10-06
 
 ---
 
@@ -15,11 +15,23 @@ This is an end-to-end semiconductor test-analytics demo on Databricks. It takes 
 - wafer-map spatial pattern classification;
 - a governed semantic layer (Unity Catalog metric views);
 - self-service analytics (AI/BI dashboard and Genie);
-- an AI supervisor agent that combines live SQL answers with document-grounded context.
+- an AI supervisor agent that combines live SQL answers with document-grounded context;
+- an operational wafer-disposition desk served from Lakebase, with write-back.
 
 It is all surfaced in one Databricks App, the **Manufacturing Operations Center**.
 
 The story is a realistic yield excursion. A fictional company, KARI Semiconductor Ops, installs a new probe card revision and handler firmware at its Austin site. Product MX-7 then loses about 7 FPY points over 10 days. The demo traces that loss from symptom (FPY dip) to signature (Edge-Ring wafer maps, HB_021 open/short bins, PT_0210 contact-resistance drift). It then follows it to root cause (dated change-log entries on TST-AUS-03..05 with probe card PC-AUS-447) and to business impact (lost dies and dollars).
+
+### Requirements coverage
+
+| Requirement | How this solution meets it |
+|---|---|
+| **Lakeflow**: ingest the raw data | A Lakeflow Spark Declarative Pipeline (`[mfg_ops] STDF raw ingestion (Lakeflow)`) streams the STDF parquet files from the UC volume with Auto Loader into five bronze streaming tables, with data-quality expectations. A Lakeflow Job orchestrates the end-to-end refresh. |
+| **Unity Catalog**: govern it | Every table, metric view, volume, synced table and the Lakebase online views live in `parijat_demos.mfg_ops`, with lineage from raw die results to the pattern class and the metric views. |
+| **Lakebase**: operational serving | Lakebase project `parijat-mfg-ops`. Gold wafer patterns and die maps are synced into Postgres (`mfg_ops.lb_*`), and the app's Wafer Operations desk reads them in milliseconds. Engineer dispositions are written back to `wafer_ops.wafer_dispositions`. |
+| **ML or GenAI**: make it intelligent | Agent Bricks Knowledge Assistant (grounded on a pipeline-generated corpus) and a multi-agent Supervisor that combines it with Genie. Wafer maps are classified with an explainable pattern model. |
+| **Genie**: natural-language queries | Genie space on seven governed metric views, with instructions and 11 verified example SQLs. |
+| **Databricks App**: surface it to the business | `mfg-ops-center`, with tabs for Dashboard, Wafer Operations (Lakebase), Genie, Supervisor Agent and Data Pipeline (run status and on-demand refresh). |
 
 ### Design goal: one pipeline is the single source of truth
 
@@ -29,6 +41,8 @@ Every downstream asset is produced or configured by **one Databricks Asset Bundl
 - metric views;
 - the Knowledge Assistant (KA) corpus;
 - the dashboard and Genie space definitions;
+- the Lakeflow ingestion pipeline;
+- the Lakebase project and its synced serving tables;
 - the agent wiring.
 
 Nothing is hand-built in the UI, so re-running the job rebuilds the whole demo consistently.
@@ -42,14 +56,16 @@ flowchart LR
   subgraph Bundle["DAB: parijat_semi_stdf (direct engine)"]
     direction LR
     G[generate_data.py<br/>synthetic STDF sort sessions] --> V[(Volume<br/>mfg_ops.raw_data)]
-    V --> R[raw_stdf_* Delta tables]
+    V --> R[Lakeflow pipeline<br/>Auto Loader + expectations<br/>raw_stdf_* streaming tables]
     R --> S[transformations.sql<br/>silver -> gold]
     S --> W[wafer-map features<br/>+ pattern classifier]
     S --> MV[mv_stdf_* metric views]
     W --> MV
     S --> E[export_kb_docs.py<br/>data dictionary + CSVs]
     E --> D[(Volume docs/)]
+    W --> LB[(Lakebase parijat-mfg-ops<br/>synced lb_wafer_patterns<br/>lb_wafer_map_dies)]
   end
+  LB --> APP
   MV --> GEN[Genie space<br/>STDF Test Quality Analytics]
   S --> DASH[AI/BI dashboard<br/>Test Quality & Throughput<br/>+ Wafer Map Patterns]
   D --> KA[Knowledge Assistant<br/>STDF-Test-Quality-KA]
@@ -60,14 +76,18 @@ flowchart LR
   MAS --> APP
 ```
 
-### Job: `[DEMOGEN] - semi_stdf - Data Generation and Transformation` (id `848871296768056`)
+### Lakeflow Job: `[mfg_ops] STDF pipeline - ingest, transform, serve` (id `848871296768056`)
+
+The job has no schedule; it is run on demand from the app's **Data Pipeline** tab (or the Jobs UI). A full run takes about 25 minutes, most of it the KA endpoint returning to ACTIVE.
 
 | # | Task | Compute | What it does |
 |---|------|---------|--------------|
-| 1 | `generate_data` | Serverless Python | Simulates about 1,200 wafer-sort sessions (Jun 15–Oct 5 2025) and writes parquet plus `raw_stdf_*` Delta tables |
-| 2 | `sql_transformations` | SQL warehouse `parijat-mfg-ops` | Builds the silver and gold layers, wafer-map features and classification, and seven metric views. Parameterized by `catalog` / `schema` |
-| 3 | `export_kb_docs` | Serverless Python | Regenerates the KA corpus (data dictionary from UC table comments, columns and sample rows, plus gold CSV extracts) |
-| 4 | `sync_agent_bricks` | Serverless Python (`databricks-sdk>=0.55`) | Points the KA at the regenerated docs (swapping out stale sources) and re-syncs it. Creates the MAS if it is missing |
+| 1 | `generate_data` | Serverless Python | Simulates about 1,200 wafer-sort sessions (Jun 15–Oct 5 2025) and writes parquet files to the `raw_data` volume |
+| 2 | `ingest_raw` | Lakeflow pipeline (serverless) | Auto Loader streams the files into five `raw_stdf_*` streaming tables with expectations. Runs as a full refresh because the generator rewrites the whole synthetic dataset each time |
+| 3 | `sql_transformations` | SQL warehouse `parijat-mfg-ops` | Builds the silver and gold layers, wafer-map features and classification, and seven metric views. Parameterized by `catalog` / `schema` |
+| 4a | `refresh_lakebase` | Serverless Python (`databricks-sdk>=0.81`, `pg8000`) | Snapshot-refreshes the two Lakebase synced tables and grants the app's service principal read access to the synced schema |
+| 4b | `export_kb_docs` | Serverless Python | Regenerates the KA corpus (data dictionary from UC table comments, columns and sample rows, plus gold CSV extracts) |
+| 5 | `sync_agent_bricks` | Serverless Python | Points the KA at the regenerated docs (swapping out stale sources) and re-syncs it. Creates the MAS if it is missing |
 
 ### Bundle-managed resources
 
@@ -79,6 +99,9 @@ flowchart LR
 | Job | `demo_workflow` | `848871296768056` |
 | Dashboard | `test_quality_ops` | `01f13ffb2116152b9c57017ac6989369` |
 | Genie space | `stdf_genie` | `01f1403396011f339af2cb207b69e9b6` |
+| Lakeflow pipeline | `stdf_ingest` | `[mfg_ops] STDF raw ingestion (Lakeflow)` (`bb686d6e-f137-4d1b-ae5d-924ac9b6629a`) |
+| Lakebase project | `mfg_ops_lakebase` | `parijat-mfg-ops`, PG 17, 0.5–2 CU autoscaling, scale-to-zero after 5 minutes |
+| Lakebase synced tables | `lb_wafer_patterns`, `lb_wafer_map_dies` | `parijat_demos.mfg_ops.lb_*` (SNAPSHOT mode) |
 
 ### Managed by the job, not by DAB resources
 
@@ -89,13 +112,25 @@ The bundle has no resource type for these, so the `sync_agent_bricks` task manag
 | Knowledge Assistant `STDF-Test-Quality-KA` | `b49c04e7-8a4b-4c5e-b7a9-6422165f5516` | `ka-b49c04e7-endpoint` |
 | Supervisor Agent `Manufacturing-Operations-Supervisor` | `40863b57-1699-430c-8335-ee6db4a0c691` | `mas-40863b57-endpoint` |
 
-**App:** `mfg-ops-center`, at https://mfg-ops-center-1444828305810485.aws.databricksapps.com. It is built with React + Vite + Express and deployed separately from `app/`. It has three tabs: Dashboard (embedded), Genie (on-behalf-of user) and Supervisor Agent (on-behalf-of user).
+**App:** `mfg-ops-center`, at https://mfg-ops-center-1444828305810485.aws.databricksapps.com. It is built with React + Vite + Express and deployed separately from `app/`. It has five tabs:
+
+| Tab | Backed by | Auth |
+|---|---|---|
+| Dashboard | Embedded AI/BI dashboard | Viewer's own access |
+| Wafer Operations | Lakebase (synced tables + `wafer_ops` write-back) | App service principal |
+| Genie | Genie space | On-behalf-of user |
+| Supervisor Agent | MAS serving endpoint | On-behalf-of user |
+| Data Pipeline | Lakeflow Job runs + run-now | App service principal (`CAN_MANAGE_RUN`) |
+
+App resources: `genie-space`, `serving-endpoint`, `lakebase` (postgres, `CAN_CONNECT_AND_CREATE`) and `refresh-job` (job, `CAN_MANAGE_RUN`). Tabs stay mounted when you switch, so chat history and in-flight requests survive.
 
 ---
 
-## 3. Data model (`parijat_demos.mfg_ops`, 34 objects)
+## 3. Data model (`parijat_demos.mfg_ops`)
 
-### Raw (written by `generate_data`)
+### Raw (Lakeflow streaming tables from the files `generate_data` writes)
+
+Each table adds `_source_file` and `_ingested_at`. Expectations drop rows with missing keys or invalid die coordinates, and warn on unknown sites, bins or parameters.
 
 | Table | Grain | Notes |
 |---|---|---|
@@ -254,7 +289,25 @@ Of the incident wafers, 28 of 31 on TST-AUS-03..05 are classified Edge-Ring, and
 
 ---
 
-## 6. AI and BI layer
+## 6. Lakebase operational serving
+
+The analytical layer answers "what happened"; the Wafer Operations desk is where an engineer acts on it.
+
+| Object (Postgres, database `databricks_postgres`) | Source / owner | Purpose |
+|---|---|---|
+| `mfg_ops.lb_wafer_patterns` | Synced from `gold_wafer_patterns` (PK `wafer_id`) | Queue of flagged wafers with pattern class, likely cause, equipment and yield |
+| `mfg_ops.lb_wafer_map_dies` | Synced from `gold_wafer_map_dies` (PK `wafer_id, die_x, die_y`) | Die-level map for any wafer |
+| `wafer_ops.wafer_dispositions` | Created and owned by the app's service principal | Write-back: Hold / Re-probe / Release / Scrap, note, user and timestamp |
+
+Measured from serverless compute: queue query about 5 ms, one wafer's 529-die map about 9 ms. The app shows the query time on each load.
+
+**Connection:** the app gets `PGHOST`, `PGDATABASE`, `PGUSER` and `LAKEBASE_ENDPOINT` from its `lakebase` resource. It generates a short-lived database credential for its service principal (`POST /api/2.0/postgres/credentials`) and the `pg` pool fetches a fresh one per connection. It retries once while a scaled-to-zero compute wakes.
+
+**Refresh:** synced tables use SNAPSHOT mode, because the gold tables are rebuilt with `CREATE OR REPLACE`. The job's `refresh_lakebase` task re-snapshots both and re-applies the read grant.
+
+---
+
+## 7. AI and BI layer
 
 ### AI/BI dashboard ("Semiconductor Test Quality and Throughput")
 
@@ -302,7 +355,7 @@ It routes questions to the right agent:
 
 ---
 
-## 7. Deployment and operations
+## 8. Deployment and operations
 
 ### Routine update
 
@@ -328,14 +381,20 @@ The Genie API rejects tables that don't exist yet, so the first deploy needs two
 - **KA source names:** they must be unique per KA. The sync script derives the name from the docs path and creates the new source before deleting stale ones.
 - **App OAuth scopes:** `dashboards.genie` and `serving.serving-endpoints` need one-time user consent. To force a re-prompt, revoke the stale grant with `DELETE /api/2.0/oauth-app-integrations/<id>/user-consent/me`.
 - **Deployment engine:** the bundle uses the **direct** engine, because the Terraform engine can't manage Genie spaces.
+- **Lakeflow pipeline ownership:** the pipeline must own the `raw_stdf_*` tables. If they were created another way, drop them before the first pipeline update.
+- **Lakebase Postgres driver:** job tasks use `pg8000` (pure Python). `psycopg[binary]` aborted with SIGABRT on serverless job compute.
+- **App and Lakebase order:** deploy the app *after* attaching the `lakebase` resource and *before* it first connects, so its service principal creates and owns `wafer_ops`. The SP needs `refresh_lakebase` to have run (or a manual grant) before it can read `mfg_ops.lb_*`.
 
 ---
 
-## 8. Design decisions
+## 9. Design decisions
 
 | Decision | Rationale | Trade-off |
 |---|---|---|
 | One schema (`mfg_ops`) owned by one bundle | Single source of truth and reproducible rebuilds | Older ad-hoc objects were dropped |
+| Lakeflow streaming tables with Auto Loader for raw ingest | Incremental-ready ingestion, data-quality expectations, pipeline lineage | Full refresh each run, because the synthetic dataset is regenerated wholesale |
+| Lakebase synced tables + app-owned write-back schema | Millisecond reads for the ops desk and a real OLTP write path, without the app touching the warehouse | Two copies of the serving data (Delta and Postgres), refreshed by the job |
+| On-demand refresh from the app, no schedule | No idle cost for a demo; the refresh is visible to the business user | Data only changes when someone presses Refresh |
 | Catalog/schema as bundle variables, passed as task and SQL parameters | Retarget the whole demo with one variable | The Genie JSON keeps fully-qualified names, which Genie requires |
 | Whole-wafer sort sessions instead of random die sampling | Gives real wafer maps and realistic UPH (~600 vs ~2 before) | About 1.7× more PRR rows |
 | Rule-based SQL classifier | Explainable, no model ops, runs in the SQL task | Loc accuracy is weaker. ML is the planned upgrade |
@@ -345,7 +404,7 @@ The Genie API rejects tables that don't exist yet, so the first deploy needs two
 
 ---
 
-## 9. Limitations and next steps
+## 10. Limitations and next steps
 
 - **Data:** the data is synthetic (no real STDF parsing). The workspace has a separate `parijat_demos.manufacturing.stdf_input` volume of binary `.stdf` files that could feed a real parser (e.g. pySTDF on Lakeflow) into the same `raw_stdf_*` contract.
 - **Business impact measure:** `mv_stdf_business_impact` uses `MAX()` over per-site cumulative columns. It is correct only when grouped by site, and should be rebuilt on a daily (non-cumulative) loss table.

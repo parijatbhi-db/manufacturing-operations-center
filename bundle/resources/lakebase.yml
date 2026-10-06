@@ -1,0 +1,36 @@
+resources:
+  postgres_projects:
+    mfg_ops_lakebase:
+      project_id: parijat-mfg-ops
+      display_name: Manufacturing Operations Center
+      pg_version: 17
+      default_endpoint_settings:
+        autoscaling_limit_min_cu: 0.5
+        autoscaling_limit_max_cu: 2
+        suspend_timeout_duration: 300s
+
+  # Gold tables served to the app from Lakebase (Postgres schema = ${var.schema}).
+  # SNAPSHOT: the gold tables are rebuilt with CREATE OR REPLACE, so each refresh re-copies them.
+  postgres_synced_tables:
+    lb_wafer_patterns:
+      synced_table_id: ${var.catalog}.${var.schema}.lb_wafer_patterns
+      source_table_full_name: ${var.catalog}.${var.schema}.gold_wafer_patterns
+      branch: ${resources.postgres_projects.mfg_ops_lakebase.name}/branches/production
+      postgres_database: ${var.lakebase_database}
+      primary_key_columns: [wafer_id]
+      scheduling_policy: SNAPSHOT
+      create_database_objects_if_missing: true
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${resources.schemas.mfg_ops.name}
+    lb_wafer_map_dies:
+      synced_table_id: ${var.catalog}.${var.schema}.lb_wafer_map_dies
+      source_table_full_name: ${var.catalog}.${var.schema}.gold_wafer_map_dies
+      branch: ${resources.postgres_projects.mfg_ops_lakebase.name}/branches/production
+      postgres_database: ${var.lakebase_database}
+      primary_key_columns: [wafer_id, die_x, die_y]
+      scheduling_policy: SNAPSHOT
+      create_database_objects_if_missing: true
+      new_pipeline_spec:
+        storage_catalog: ${var.catalog}
+        storage_schema: ${resources.schemas.mfg_ops.name}

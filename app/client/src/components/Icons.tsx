@@ -79,3 +79,23 @@ export const IconRefresh = ({ size = 14, className }: P) =>
       <path d="M21 4v5h-5" />
     </>
   ));
+
+export const IconWafer = ({ size = 18, className }: P) =>
+  svg(size, className, (
+    <>
+      <path d="M12 3a9 9 0 1 0 9 9" />
+      <path d="M21 12h-3" />
+      <path d="M8 9h2v2H8zM12 9h2v2h-2zM8 13h2v2H8zM12 13h2v2h-2z" />
+    </>
+  ));
+
+export const IconPipeline = ({ size = 18, className }: P) =>
+  svg(size, className, (
+    <>
+      <circle cx="5" cy="6" r="2" />
+      <circle cx="5" cy="18" r="2" />
+      <circle cx="19" cy="12" r="2" />
+      <path d="M7 6h4a3 3 0 0 1 3 3v0a3 3 0 0 0 3 3" />
+      <path d="M7 18h4a3 3 0 0 0 3-3v0a3 3 0 0 1 3-3" />
+    </>
+  ));

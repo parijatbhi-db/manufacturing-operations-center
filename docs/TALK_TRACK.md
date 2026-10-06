@@ -1,15 +1,17 @@
 # Manufacturing Operations Center: Demo Talk Track
 
 **Audience:** semiconductor and electronics manufacturing (yield/test engineering, manufacturing IT, data and analytics leaders)
-**Length:** about 20 minutes, plus Q&A. There are cut points for a 10-minute version.
+**Length:** about 23 minutes, plus Q&A. There are cut points for a 10-minute version.
 **Story in one line:** *A probe-card change quietly cost seven points of yield. Watch how fast we go from "FPY looks off" to "it's PC-AUS-447 on three testers, here's the dollar impact, and here's the wafer-map proof", without leaving one governed platform.*
 
 ---
 
 ## Pre-demo checklist (15 minutes before)
 
-- [ ] Open the app at https://mfg-ops-center-1444828305810485.aws.databricksapps.com and click through all three tabs.
-  - If Genie or Agent returns 403, the OAuth consent has gone stale. See DESIGN.md §7.
+- [ ] Open the app at https://mfg-ops-center-1444828305810485.aws.databricksapps.com and click through all five tabs.
+  - If Genie or Agent returns 403, the OAuth consent has gone stale. See DESIGN.md §8.
+- [ ] Warm up Lakebase: open **Wafer Operations** once. The Lakebase compute scales to zero after 5 idle minutes and wakes in well under a second, but the first load after idle is the slowest.
+- [ ] Check **Data Pipeline** shows the last run as SUCCESS. Don't start a refresh right before the demo: a full run takes about 25 minutes.
 - [ ] Warm up the warehouse: load the dashboard once. `parijat-mfg-ops` auto-stops after 10 minutes, and a cold start is about 5–10 seconds.
 - [ ] Warm up the agents: ask the Supervisor Agent one throwaway question. The first call can take 30–60 seconds.
 - [ ] Dashboard: clear all filters. Check that the wafer map shows **MX7-F12-W27-W01**.
@@ -35,9 +37,9 @@
 
 ## 1. The Operations Center app (1 minute)
 
-**Show:** the app landing page and its three tabs.
+**Show:** the app landing page and its five tabs.
 
-> "This is a Databricks App, a full web application running inside the platform. It's secured by the same identity, and every query runs *as the signed-in user*, so Unity Catalog permissions are enforced end to end. There's no extract and no separate BI server. It has three views: an operational dashboard, Genie for ad-hoc questions, and an AI supervisor agent."
+> "This is a Databricks App, a full web application running inside the platform, secured by the same identity. There's no extract and no separate BI server. It has five views: an operational dashboard, a wafer operations desk running on Lakebase, Genie for ad-hoc questions, an AI supervisor agent, and the data pipeline that keeps all of it fresh."
 
 ---
 
@@ -78,11 +80,30 @@
 5. **Classifier vs Engineer Review:**
    > "How much should you trust the classifier? Yield engineers labeled 521 wafers by eye, and the classifier agrees on **93%**, with 37 of 40 on Edge-Ring. It's deliberately an explainable rule set in SQL: radial zone fail rates, cluster shape, angular concentration. An engineer can read exactly why a wafer was called Edge-Ring. Swapping in an ML model later is a drop-in, because the labeled training set is already in the lakehouse."
 
-**10-minute cut:** skip step 5, and skip section 4 entirely.
+**10-minute cut:** skip step 5 here, and skip section 5 (Genie) entirely.
 
 ---
 
-## 4. Ad-hoc questions: Genie (3 minutes)
+## 4. Act on it: the Wafer Operations desk on Lakebase (3 minutes)
+
+**Click:** the **Wafer Operations** tab.
+
+> "Analytics tells you what happened. Operations needs somewhere to *act*, with transactional speed. This desk runs on **Lakebase**, Databricks' serverless Postgres. The pipeline syncs the gold wafer patterns and die maps into Postgres, and the app reads them in milliseconds. Look at the green chip: the queue loaded in a few milliseconds."
+
+1. **Filter the queue:** Pattern = **Edge-Ring**, Site = **AUS**.
+   > "Here's the Edge-Ring queue at Austin: the PC-AUS-447 wafers we just found on the dashboard."
+2. **Select a wafer**, e.g. `MX7-F12-W27-W01`.
+   > "The die map renders straight from Postgres: 529 dies, 87 failing, ringed around the edge, mostly HB_021. Same wafer, same evidence, but now in an operational tool."
+3. **Record a disposition:** type a note such as *"PC-AUS-447 pulled for planarity check"* and click **Hold**.
+   > "That's a real write to Postgres, an OLTP transaction recorded with my identity and a timestamp, not a ticket in another system. It shows in the history immediately, and the wafer stays in the open queue until someone releases, re-probes or scraps it."
+4. *Optional:* switch the status filter to **All flagged** to show dispositioned wafers.
+
+**Point to make:**
+> "Same governed data, two speeds: Delta for analytics and AI, Lakebase for the operational workflow. No separate database team, no nightly extract."
+
+---
+
+## 5. Ad-hoc questions: Genie (3 minutes)
 
 **Click:** the Genie tab.
 
@@ -102,7 +123,7 @@ Ask, in order:
 
 ---
 
-## 5. Root cause in one question: Supervisor Agent (3 minutes)
+## 6. Root cause in one question: Supervisor Agent (3 minutes)
 
 **Click:** the Supervisor Agent tab.
 
@@ -130,26 +151,31 @@ Optional follow-ups:
 
 ---
 
-## 6. Under the hood: one pipeline, one source of truth (3 minutes)
+## 7. Under the hood: one pipeline, one source of truth (3 minutes)
+
+**Click:** the **Data Pipeline** tab.
+
+> "Here's the part architects care about. Everything you just saw comes from **one schema**, built by **one pipeline**, and the business can refresh it from right here."
+
+1. **The steps** (Lakeflow Job `[mfg_ops] STDF pipeline - ingest, transform, serve`):
+   > "Generate the STDF files, **ingest them with a Lakeflow declarative pipeline**, using Auto Loader with data-quality expectations on every feed. Then transform to silver and gold, including the wafer-map classifier. Then refresh the **Lakebase** serving tables, regenerate the Knowledge Assistant's documents and re-sync the agents. If the data changes, the dashboard, the wafer desk, Genie *and* the AI's knowledge all update together."
+   - Point at **Refresh data**. Don't click it live: a full run is about 25 minutes. Show the last successful run instead, and click through to it with **Open job** if the audience wants to see the Lakeflow UI.
+2. **Data quality:** in the workspace, open the pipeline `[mfg_ops] STDF raw ingestion (Lakeflow)`.
+   > "Every raw feed has expectations: missing keys and impossible die coordinates are dropped, unknown sites or bins are flagged. This run ingested all 565,856 die results with zero drops."
 
 **Switch to:** the workspace, Catalog Explorer → `parijat_demos.mfg_ops`.
-
-> "Here's the part architects care about. Everything you just saw comes from **one schema**, built by **one pipeline**."
-
-1. **The job** (`[DEMOGEN] - semi_stdf - ...`) has four tasks:
-   > "Ingest the STDF results, transform to silver and gold including the wafer-map classifier, regenerate the Knowledge Assistant's documents from the gold tables, and re-sync the agents. If the data changes, the dashboard, Genie *and* the AI's knowledge all update together. The KA can't drift from the data, because the pipeline writes its corpus."
-2. **Lineage:** open `gold_wafer_patterns` → **Lineage**.
-   > "Full column-level lineage, from raw PRR die results to the pattern class to the metric view Genie queries."
-3. **Governance:**
-   > "One set of Unity Catalog permissions covers tables, metric views, the volume of documents, the dashboard, Genie and the agents."
-4. **It's code** (optional: show `databricks.yml`):
-   > "The schema, warehouse, job, dashboard and Genie space are all one Databricks Asset Bundle, in Git. `bundle deploy` to a new workspace and you have the whole thing."
+3. **Lineage:** open `gold_wafer_patterns` → **Lineage**.
+   > "Full column-level lineage, from raw PRR die results to the pattern class, the metric view Genie queries, and the Lakebase synced table the ops desk reads."
+4. **Governance:**
+   > "One set of Unity Catalog permissions covers tables, metric views, the volume of documents, the Lakebase synced tables, the dashboard, Genie and the agents."
+5. **It's code** (optional: show `databricks.yml`):
+   > "The schema, warehouse, Lakeflow pipeline and job, Lakebase project and synced tables, dashboard and Genie space are all one Databricks Asset Bundle, in Git. `bundle deploy` to a new workspace and you have the whole thing."
 
 ---
 
-## 7. Close (1 minute)
+## 8. Close (1 minute)
 
-> "So: a seven-point yield excursion, from first symptom to probe-card root cause, wafer-map evidence and dollar impact, on one platform.
+> "So: a seven-point yield excursion, from first symptom to probe-card root cause, wafer-map evidence, dollar impact and an engineer's hold on the affected wafers, on one platform.
 >
 > For you, the questions are: where does your STDF land today, how long does a yield excursion take to close, and what would it be worth to catch the next PC-AUS-447 in hours instead of days?"
 
@@ -166,15 +192,18 @@ Optional follow-ups:
 | *How does this scale?* | This demo is about 566K die results. Production fabs generate billions per month. It's the same Delta, serverless SQL and Photon stack: partition or cluster by date/site/product and use incremental (Lakeflow) ingestion. |
 | *Can it alert us before engineers notice?* | Yes. Add a SQL alert or Lakehouse Monitoring on the daily Edge-Ring rate per probe card. In this story it would have fired on Aug 18. |
 | *Does Genie make things up?* | It's grounded on metric views with certified definitions and example SQL, and every answer shows its query. Instructions constrain formatting and semantics. |
-| *Security for the app?* | The app runs on-behalf-of the user, so UC row- and column-level security applies to every tab. |
-| *What did it take to build?* | One bundle: about 700 lines of generator, about 850 lines of SQL, a dashboard JSON and a Genie JSON. It redeploys with `bundle deploy` plus one job run (~25 minutes). |
+| *Security for the app?* | Genie and the agent run on-behalf-of the signed-in user, so UC permissions apply to them. The Wafer Operations desk and Data Pipeline tab use the app's service principal, which has only read on the synced schema, its own write-back schema, and run permission on the one job. Every disposition records who entered it. |
+| *Why Lakebase and not just the warehouse?* | The ops desk needs millisecond point lookups and transactional writes from many users. Lakebase is serverless Postgres that scales to zero, and synced tables keep it in step with the gold layer without a separate ETL. |
+| *Can dispositions flow back to analytics?* | Yes: Lakehouse sync (CDC from Lakebase to Delta) would land `wafer_dispositions` in Unity Catalog, so Genie could answer "how many Edge-Ring wafers were scrapped". It's the natural next step. |
+| *What did it take to build?* | One bundle: about 700 lines of generator, about 850 lines of SQL, an 80-line Lakeflow pipeline, a dashboard JSON, a Genie JSON and the Lakebase definitions. It redeploys with `bundle deploy` plus one job run (~25 minutes). |
 
 ---
 
 ## Reset after the demo
 
 - Clear the dashboard filters, and set the wafer map back to `MX7-F12-W27-W01` if you changed it.
-- No data changes are needed. If you want fresh agent state, rerun the job: `databricks bundle run demo_workflow -p e2-demo-fe`.
+- Dispositions you record in Wafer Operations persist, and that's intentional. Use a different wafer each time if you want an empty history on screen.
+- No data changes are needed. To rebuild everything, press **Refresh data** in the Data Pipeline tab, or run `databricks bundle run demo_workflow -p e2-demo-fe`.
 
 ## Key numbers cheat sheet
 
@@ -189,3 +218,5 @@ Optional follow-ups:
 | Showcase wafer | MX7-F12-W27-W01: 83.6% yield, 39.5% edge fail vs 10.1% center |
 | Classifier agreement | 93.1% of 521 reviewed wafers |
 | Onset / recovery | 2025-08-18 07:30 / 2025-08-24 22:15 |
+| Lakebase reads (serverless) | queue ~5 ms, one wafer's 529-die map ~9 ms |
+| Lakeflow ingest | 565,856 PRR + 487,320 PTR rows, 0 dropped by expectations |

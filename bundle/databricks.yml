@@ -18,6 +18,15 @@ variables:
   environment:
     description: Deployment environment
     default: dev
+  lakebase_endpoint:
+    description: Read-write Lakebase endpoint on that branch
+    default: projects/parijat-mfg-ops/branches/production/endpoints/primary
+  lakebase_database:
+    description: Postgres database holding the synced tables and app write-back tables
+    default: databricks_postgres
+  app_name:
+    description: Databricks App that surfaces the solution
+    default: mfg-ops-center
   workspace_path:
     description: Workspace path where bundle files will be synced
     default: /Users/parijat.bhide@databricks.com/semi_stdf
@@ -30,6 +39,8 @@ sync:
   - generate_data.py
   - transformations.sql
   - export_kb_docs.py
+  - refresh_lakebase.py
+  - pipelines/stdf_ingest.sql
   - redeploy_agents.py
   - dashboard_test_quality_ops.lvdash.json
 targets:
@@ -63,7 +74,8 @@ resources:
       warehouse_type: PRO
   jobs:
     demo_workflow:
-      name: '[DEMOGEN] - ${var.project_name} - Data Generation and Transformation'
+      name: '[mfg_ops] STDF pipeline - ingest, transform, serve'
+      description: Generates STDF wafer-sort data, ingests it with Lakeflow, builds silver/gold + wafer-map patterns, refreshes Lakebase serving tables, the KA corpus and the agents.
       tasks:
       - task_key: generate_data
         spark_python_task:
@@ -78,9 +90,17 @@ resources:
           - ${resources.volumes.mfg_ops_raw_data.name}
         environment_key: default
         max_retries: 1
-      - task_key: sql_transformations
+      - task_key: ingest_raw
         depends_on:
         - task_key: generate_data
+        pipeline_task:
+          pipeline_id: ${resources.pipelines.stdf_ingest.id}
+          # generate_data rewrites the full synthetic dataset each run, so re-ingest from scratch
+          full_refresh: true
+        max_retries: 1
+      - task_key: sql_transformations
+        depends_on:
+        - task_key: ingest_raw
         sql_task:
           file:
             path: ./transformations.sql
@@ -103,6 +123,25 @@ resources:
           - --volume
           - ${resources.volumes.mfg_ops_raw_data.name}
         environment_key: default
+        max_retries: 1
+      - task_key: refresh_lakebase
+        depends_on:
+        - task_key: sql_transformations
+        spark_python_task:
+          python_file: ./refresh_lakebase.py
+          source: WORKSPACE
+          parameters:
+          - --synced-tables
+          - ${var.catalog}.${var.schema}.lb_wafer_patterns,${var.catalog}.${var.schema}.lb_wafer_map_dies
+          - --endpoint
+          - ${var.lakebase_endpoint}
+          - --database
+          - ${var.lakebase_database}
+          - --schema
+          - ${var.schema}
+          - --app-name
+          - ${var.app_name}
+        environment_key: agents
         max_retries: 1
       - task_key: sync_agent_bricks
         depends_on:
@@ -128,7 +167,8 @@ resources:
         spec:
           client: '3'
           dependencies:
-          - databricks-sdk>=0.55.0
+          - databricks-sdk>=0.81.0
+          - pg8000>=1.31
   dashboards:
     test_quality_ops:
       display_name: Semiconductor Test Quality and Throughput
