@@ -235,6 +235,20 @@
         ]
       },
       {
+        "id": "b82d4228236f4f8c801b4e8fbf42440c",
+        "question": [
+          "What is the average First Pass Yield over the last 14 days?"
+        ],
+        "sql": [
+          "SELECT\n",
+          "  ROUND(MEASURE(`First Pass Yield`) * 100, 2) AS `First Pass Yield (%)`,\n",
+          "  ROUND(MEASURE(`Retest Rate`) * 100, 2) AS `Retest Rate (%)`,\n",
+          "  MEASURE(`Total Dies Tested`) AS `Total Dies Tested`\n",
+          "FROM parijat_demos.mfg_ops.mv_stdf_test_yield\n",
+          "WHERE `Date` > DATE_SUB((SELECT MAX(date) FROM parijat_demos.mfg_ops.gold_test_kpis_daily), 14)\n"
+        ]
+      },
+      {
         "id": "c57eb45caef1411e8e120c889f62560c",
         "question": [
           "What is the daily first-pass yield trend for a specific site and product?"
@@ -327,7 +341,8 @@
           "Wafer-map patterns: every wafer is probed in one sort session and classified into a WM-811K pattern class: None, Random, Center, Donut, Edge-Ring, Edge-Loc, Loc, Scratch, Near-full.\n",
           "'Patterned' wafers are those whose Pattern Class is not None or Random. Use the Patterned Wafer Rate measure for pattern prevalence.\n",
           "The AUS MX-7 incident shows up as Edge-Ring wafers on testers TST-AUS-03, TST-AUS-04, TST-AUS-05 with probe card PC-AUS-447, starting 2025-08-18. Edge-Ring and Edge-Loc failures are mostly hard bin HB_021 (open/short contact).\n",
-          "When querying metric views, wrap measures in MEASURE(), e.g. SELECT `Pattern Class`, MEASURE(`Wafer Count`) FROM parijat_demos.mfg_ops.mv_stdf_wafer_patterns GROUP BY ALL.\n"
+          "When querying metric views, wrap measures in MEASURE(), e.g. SELECT `Pattern Class`, MEASURE(`Wafer Count`) FROM parijat_demos.mfg_ops.mv_stdf_wafer_patterns GROUP BY ALL.\n",
+          "Data covers 2025-06-15 to 2025-10-05. Interpret relative windows such as 'last 14 days' or 'last month' relative to the latest date in the data, not CURRENT_DATE(). Metric views cannot be joined (no CTE cross join, no JOIN): get the anchor date with a scalar subquery in the WHERE clause, e.g. WHERE `Date` > DATE_SUB((SELECT MAX(date) FROM parijat_demos.mfg_ops.gold_test_kpis_daily), 14).\n"
         ],
         "id": "d2a065dedb1a46b1872461fcf2cd1d90"
       }

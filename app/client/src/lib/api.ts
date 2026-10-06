@@ -29,7 +29,8 @@ export type GenieMessage = {
   content?: string;
   attachments?: GenieAttachment[];
   query_result?: any;
-  error?: { message?: string } | null;
+  // Genie returns { error: '<SQL error text>', type: 'SQL_EXECUTION_EXCEPTION' }
+  error?: { error?: string; message?: string; type?: string } | null;
 };
 
 export type GenieStartResponse = {

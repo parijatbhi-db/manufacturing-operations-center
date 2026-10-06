@@ -106,10 +106,12 @@ export default function GenieView({ config }: { config: AppConfig }) {
       const final = await pollUntilDone(convId, messageId);
 
       if (final.status === 'FAILED') {
+        // First line of the SQL error is the readable part; the rest is a query plan dump.
+        const detail = (final.error?.error || final.error?.message || '').split('\n')[0].slice(0, 300);
         setMessages((prev) =>
           prev.map((m) =>
             m.id === placeholder.id
-              ? { ...m, text: final.error?.message || 'Genie returned an error.', status: 'error', error: 'failed' }
+              ? { ...m, text: detail ? `Genie returned an error: ${detail}` : 'Genie returned an error.', status: 'error', error: 'failed' }
               : m
           )
         );

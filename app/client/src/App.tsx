@@ -92,9 +92,17 @@ export default function App() {
         </aside>
 
         <main className="content">
-          {tab === 'dashboard' && <DashboardView config={config} />}
-          {tab === 'genie' && <GenieView config={config} />}
-          {tab === 'agent' && <AgentView config={config} />}
+          {/* Keep every view mounted so chat history, in-flight requests and the
+              dashboard iframe survive tab switches; inactive views are just hidden. */}
+          <div style={{ display: tab === 'dashboard' ? 'contents' : 'none' }}>
+            <DashboardView config={config} />
+          </div>
+          <div style={{ display: tab === 'genie' ? 'contents' : 'none' }}>
+            <GenieView config={config} />
+          </div>
+          <div style={{ display: tab === 'agent' ? 'contents' : 'none' }}>
+            <AgentView config={config} />
+          </div>
         </main>
       </div>
     </div>
