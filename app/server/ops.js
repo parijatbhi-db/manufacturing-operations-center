@@ -40,7 +40,7 @@ export function registerOpsRoutes(app, getUserInfo) {
     return schemaReady;
   };
 
-  // Queue of wafers with a systematic pattern, with their latest disposition
+  // Queue of wafers with a systematic pattern or an anomalous map, with their latest disposition
   app.get('/api/ops/wafers', async (req, res) => {
     try {
       await ready();
@@ -50,17 +50,18 @@ export function registerOpsRoutes(app, getUserInfo) {
         `SELECT p.wafer_id, p.lot_id, p.site, p.product, p.tester_id, p.probe_card_id,
                 p.sort_date::text AS sort_date, p.pattern_class, p.likely_cause,
                 p.wafer_yield::float AS wafer_yield, p.edge_fail_rate::float AS edge_fail_rate,
-                d.disposition, d.entered_by, d.entered_at
+                p.pattern_confidence::float AS pattern_confidence, p.anomaly_score::float AS anomaly_score,
+                p.is_anomalous, d.disposition, d.entered_by, d.entered_at
            FROM ${patterns} p
            LEFT JOIN LATERAL (
              SELECT disposition, entered_by, entered_at FROM wafer_ops.wafer_dispositions w
               WHERE w.wafer_id = p.wafer_id ORDER BY entered_at DESC LIMIT 1
            ) d ON TRUE
-          WHERE p.pattern_class NOT IN ('None', 'Random')
+          WHERE (p.pattern_class NOT IN ('None', 'Random') OR p.is_anomalous)
             AND ($1 = '' OR p.pattern_class = $1)
             AND ($2 = '' OR p.site = $2)
             AND ($3 <> 'open' OR d.disposition IS NULL OR d.disposition = 'HOLD')
-          ORDER BY p.sort_date DESC, p.wafer_yield ASC
+          ORDER BY p.sort_date DESC, p.anomaly_score DESC
           LIMIT 300`,
         [pattern, site, status]
       );
@@ -78,7 +79,9 @@ export function registerOpsRoutes(app, getUserInfo) {
         query(`SELECT wafer_id, lot_id, site, product, foundry, tester_id, probe_card_id, handler_id,
                       sort_date::text AS sort_date, pattern_class, likely_cause, reviewed_pattern,
                       dies_tested, dies_pass, wafer_yield::float AS wafer_yield,
-                      edge_fail_rate::float AS edge_fail_rate, center_fail_rate::float AS center_fail_rate
+                      edge_fail_rate::float AS edge_fail_rate, center_fail_rate::float AS center_fail_rate,
+                      pattern_confidence::float AS pattern_confidence, anomaly_score::float AS anomaly_score,
+                      is_anomalous, rule_pattern_class
                  FROM ${patterns} WHERE wafer_id = $1`, [id]),
         query(`SELECT die_x, die_y, bin_label FROM ${dies} WHERE wafer_id = $1`, [id]),
         query(`SELECT disposition, note, entered_by, entered_at FROM wafer_ops.wafer_dispositions

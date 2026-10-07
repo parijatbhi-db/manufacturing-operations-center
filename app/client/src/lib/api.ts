@@ -104,6 +104,9 @@ export type OpsWafer = {
   likely_cause: string;
   wafer_yield: number;
   edge_fail_rate: number;
+  pattern_confidence: number;
+  anomaly_score: number;
+  is_anomalous: boolean;
   disposition: string | null;
   entered_by: string | null;
   entered_at: string | null;
@@ -117,6 +120,7 @@ export type OpsWaferDetail = {
     dies_tested: number;
     dies_pass: number;
     center_fail_rate: number;
+    rule_pattern_class: string;
   };
   dies: { die_x: number; die_y: number; bin_label: string }[];
   history: { disposition: string; note: string | null; entered_by: string; entered_at: string }[];

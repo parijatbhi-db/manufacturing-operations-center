@@ -563,6 +563,7 @@ button { font-family: inherit; }
   color: var(--db-teal);
   white-space: nowrap;
 }
+.anomaly-flag { color: #B4230F; font-weight: 600; }
 .pattern-tag.p-Edge-Ring, .pattern-tag.p-Edge-Loc { background: #FFE3DE; color: #B4230F; }
 .pattern-tag.p-Center, .pattern-tag.p-Donut { background: #FFF1D9; color: #8A5A00; }
 .pattern-tag.p-Scratch, .pattern-tag.p-Loc { background: #EEE8F7; color: #5B3F8C; }

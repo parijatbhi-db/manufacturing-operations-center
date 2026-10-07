@@ -337,7 +337,7 @@
           "- When showing rankings (top bins, top params), order by count or value descending\n",
           "- Include site and product in GROUP BY when the user asks for comparisons across sites\n",
           "All data sources are defined as metric views with pre-defined measures and dimensions for consistent analytics.\n",
-          "Metric views: mv_stdf_test_yield (FPY/yield), mv_stdf_failure_bins (bin distribution), mv_stdf_param_drift (z-scores), mv_stdf_throughput (UPH), mv_stdf_business_impact (cost/die loss), mv_stdf_equipment_changes (change log), mv_stdf_wafer_patterns (wafer-map pattern class per wafer).\n",
+          "Metric views: mv_stdf_test_yield (FPY/yield), mv_stdf_failure_bins (bin distribution), mv_stdf_param_drift (z-scores), mv_stdf_throughput (UPH), mv_stdf_business_impact (cost/die loss), mv_stdf_equipment_changes (change log), mv_stdf_wafer_patterns (wafer-map pattern class per wafer from the ML classifier, plus the anomaly detector's Is Anomalous / Anomalous Wafer Count / Average Anomaly Score; an anomalous wafer whose Pattern Class is None is an unusual map that matches no known pattern).\n",
           "Wafer-map patterns: every wafer is probed in one sort session and classified into a WM-811K pattern class: None, Random, Center, Donut, Edge-Ring, Edge-Loc, Loc, Scratch, Near-full.\n",
           "'Patterned' wafers are those whose Pattern Class is not None or Random. Use the Patterned Wafer Rate measure for pattern prevalence.\n",
           "The AUS MX-7 incident shows up as Edge-Ring wafers on testers TST-AUS-03, TST-AUS-04, TST-AUS-05 with probe card PC-AUS-447, starting 2025-08-18. Edge-Ring and Edge-Loc failures are mostly hard bin HB_021 (open/short contact).\n",

@@ -397,8 +397,8 @@ ALTER TABLE gold_counter_avg_uph_7d SET TBLPROPERTIES ('comment' = 'Single-row K
 -- WAFER-MAP PATTERN CLASSIFICATION
 -- =============================
 -- Each wafer is probed in one sort session, so the PRR die results form a complete wafer map.
--- Spatial features are computed per wafer and a rule-based classifier assigns a WM-811K pattern
--- class: None, Random, Center, Donut, Edge-Ring, Edge-Loc, Loc, Scratch, Near-full.
+-- Spatial features are computed per wafer here. wafer_ml.py trains an anomaly detector and a pattern
+-- classifier on them; wafer_patterns.sql then builds gold_wafer_patterns from the model output.
 
 -- Silver: Wafer review labels (yield-engineer visual classification for a sample of wafers)
 CREATE OR REPLACE TABLE silver_wafer_review_labels AS
@@ -466,8 +466,10 @@ FROM silver_stdf_prr_parts p
 JOIN silver_wafer_sort_sessions s ON p.wafer_id = s.wafer_id;
 ALTER TABLE gold_wafer_map_dies SET TBLPROPERTIES ('comment' = 'Die-level wafer map: die_x/die_y grid coordinates, normalized radius r_norm (0 center .. 1 edge), angle theta, radial_zone (Center/Inner/Outer/Edge), bins and pass/retest flags. Backs wafer-map scatter plots.');
 
--- Gold: Wafer patterns (spatial features + rule-based pattern class per wafer)
-CREATE OR REPLACE TABLE gold_wafer_patterns AS
+-- Silver: Wafer spatial features (model inputs) + rule-based baseline class
+-- The pattern_class served downstream comes from the ML models in wafer_ml.py; the rule class is
+-- kept only as the baseline that gold_wafer_model_metrics compares the classifier against.
+CREATE OR REPLACE TABLE silver_wafer_features AS
 WITH dies AS (
   SELECT
     wafer_id, die_x, die_y, r_norm, theta,
@@ -565,37 +567,13 @@ classified AS (
            AND clustered_mean_r < 0.4 THEN 'Center'
       WHEN inner_fail_angular_conc < 0.35 AND clustered_mean_r BETWEEN 0.3 AND 0.75 THEN 'Donut'
       ELSE 'Loc'
-    END AS pattern_class
+    END AS rule_pattern_class
   FROM features f
 )
 SELECT
-  s.wafer_id,
-  s.lot_id,
-  s.site,
-  s.product,
-  s.foundry,
-  s.tester_id,
-  s.probe_card_id,
-  s.handler_id,
-  s.program_version,
-  s.sort_start,
-  s.sort_date,
-  s.week_start,
-  s.dies_tested,
-  s.dies_pass,
-  s.dies_retested,
-  s.wafer_yield,
-  c.pattern_class,
-  CASE
-    WHEN c.pattern_class IN ('Edge-Ring', 'Edge-Loc') THEN 'Probe contact / edge process (planarity, bevel etch)'
-    WHEN c.pattern_class = 'Center' THEN 'Center process non-uniformity (CMP, implant, deposition)'
-    WHEN c.pattern_class = 'Donut' THEN 'Radial process ring (spin coat, thermal)'
-    WHEN c.pattern_class = 'Scratch' THEN 'Mechanical handling scratch'
-    WHEN c.pattern_class = 'Loc' THEN 'Localized defect cluster (particle, reticle)'
-    WHEN c.pattern_class = 'Random' THEN 'Elevated random defectivity'
-    WHEN c.pattern_class = 'Near-full' THEN 'Gross wafer failure'
-    ELSE 'No systematic pattern'
-  END AS likely_cause,
+  c.wafer_id,
+  c.n_dies,
+  c.n_fail,
   ROUND(c.fail_rate, 4) AS fail_rate,
   ROUND(c.center_fail_rate, 4) AS center_fail_rate,
   ROUND(c.inner_fail_rate, 4) AS inner_fail_rate,
@@ -608,37 +586,11 @@ SELECT
   ROUND(c.cluster_excess, 2) AS cluster_excess,
   ROUND(c.clustered_mean_r, 3) AS clustered_mean_r,
   ROUND(c.clustered_elongation, 2) AS clustered_elongation,
+  c.rule_pattern_class,
   l.reviewed_pattern
 FROM classified c
-JOIN silver_wafer_sort_sessions s ON c.wafer_id = s.wafer_id
 LEFT JOIN silver_wafer_review_labels l ON c.wafer_id = l.wafer_id;
-ALTER TABLE gold_wafer_patterns SET TBLPROPERTIES ('comment' = 'One row per wafer: sort context (lot, site, product, tester, probe card, handler, date), wafer yield, spatial features (zone fail rates, angular concentration, chi-square dispersion, clustered-fail shape) and the rule-based pattern_class (None, Random, Center, Donut, Edge-Ring, Edge-Loc, Loc, Scratch, Near-full) with likely_cause. reviewed_pattern holds the engineer label when the wafer was reviewed.');
-
--- Gold: Wafer pattern mix weekly
-CREATE OR REPLACE TABLE gold_wafer_pattern_weekly AS
-SELECT
-  week_start,
-  site,
-  product,
-  pattern_class,
-  COUNT(*) AS wafer_count,
-  ROUND(AVG(wafer_yield), 4) AS avg_wafer_yield,
-  SUM(dies_tested - dies_pass) AS dies_failed
-FROM gold_wafer_patterns
-GROUP BY week_start, site, product, pattern_class;
-ALTER TABLE gold_wafer_pattern_weekly SET TBLPROPERTIES ('comment' = 'Weekly wafer counts, average wafer yield and failed dies by site/product/pattern_class. Shows the Edge-Ring surge at AUS MX-7 during 2025-08-18..2025-08-27.');
-
--- Gold: Classifier agreement with engineer review labels (confusion matrix)
-CREATE OR REPLACE TABLE gold_wafer_pattern_eval AS
-SELECT
-  reviewed_pattern,
-  pattern_class AS predicted_pattern,
-  COUNT(*) AS wafer_count,
-  reviewed_pattern = pattern_class AS is_match
-FROM gold_wafer_patterns
-WHERE reviewed_pattern IS NOT NULL
-GROUP BY reviewed_pattern, pattern_class;
-ALTER TABLE gold_wafer_pattern_eval SET TBLPROPERTIES ('comment' = 'Confusion matrix of rule-based pattern_class vs yield-engineer reviewed_pattern for reviewed wafers. Agreement = SUM(wafer_count) FILTER (is_match) / SUM(wafer_count).');
+ALTER TABLE silver_wafer_features SET TBLPROPERTIES ('comment' = 'One row per wafer: spatial wafer-map features (zone fail rates, angular concentration, chi-square dispersion, clustered-fail shape) used as model inputs, the rule-based baseline class rule_pattern_class, and the engineer label reviewed_pattern where reviewed.');
 
 -- =============================
 -- Table comments detail (documentation and story alignment)
@@ -807,53 +759,4 @@ dimensions:
 measures:
   - name: Change Count
     expr: COUNT(1)
-$$;
-
-CREATE OR REPLACE VIEW mv_stdf_wafer_patterns
-COMMENT 'Wafer-map pattern classification per wafer sort session.'
-WITH METRICS
-LANGUAGE YAML
-AS $$
-version: 1.1
-source: gold_wafer_patterns
-dimensions:
-  - name: Sort Date
-    expr: sort_date
-  - name: Week Start
-    expr: week_start
-  - name: Site
-    expr: site
-  - name: Product
-    expr: product
-  - name: Foundry
-    expr: foundry
-  - name: Lot ID
-    expr: lot_id
-  - name: Wafer ID
-    expr: wafer_id
-  - name: Tester ID
-    expr: tester_id
-  - name: Probe Card ID
-    expr: probe_card_id
-  - name: Handler ID
-    expr: handler_id
-  - name: Pattern Class
-    expr: pattern_class
-  - name: Likely Cause
-    expr: likely_cause
-measures:
-  - name: Wafer Count
-    expr: COUNT(1)
-  - name: Patterned Wafer Count
-    expr: COUNT_IF(pattern_class NOT IN ('None', 'Random'))
-  - name: Patterned Wafer Rate
-    expr: COUNT_IF(pattern_class NOT IN ('None', 'Random')) / COUNT(1)
-  - name: Average Wafer Yield
-    expr: AVG(wafer_yield)
-  - name: Dies Tested
-    expr: SUM(dies_tested)
-  - name: Dies Failed
-    expr: SUM(dies_tested - dies_pass)
-  - name: Average Edge Fail Rate
-    expr: AVG(edge_fail_rate)
 $$;

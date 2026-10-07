@@ -147,6 +147,7 @@ export default function OpsView() {
                 </div>
                 <div className="ops-row-meta">
                   {x.sort_date} · {x.site} · {x.tester_id} · {x.probe_card_id} · yield {pct(x.wafer_yield)}
+                  {x.is_anomalous && <> · <span className="anomaly-flag">anomaly {x.anomaly_score.toFixed(2)}</span></>}
                 </div>
                 {x.disposition && <div className={`disp-tag d-${x.disposition}`}>{x.disposition}</div>}
               </button>
@@ -180,9 +181,11 @@ export default function OpsView() {
                   </div>
                 </div>
                 <div className="ops-facts">
-                  <div className="fact"><span>Pattern</span><b className={`pattern-tag p-${w.pattern_class}`}>{w.pattern_class}</b></div>
+                  <div className="fact"><span>Pattern (ML)</span><b><span className={`pattern-tag p-${w.pattern_class}`}>{w.pattern_class}</span> {pct(w.pattern_confidence)} confidence</b></div>
+                  <div className="fact"><span>Anomaly score</span><b>{w.anomaly_score.toFixed(3)} {w.is_anomalous ? '(anomalous map)' : '(within normal range)'}</b></div>
                   <div className="fact"><span>Likely cause</span><b>{w.likely_cause}</b></div>
                   <div className="fact"><span>Engineer label</span><b>{w.reviewed_pattern || 'Not reviewed'}</b></div>
+                  <div className="fact"><span>Rule baseline</span><b>{w.rule_pattern_class}</b></div>
                   <div className="fact"><span>Wafer yield</span><b>{pct(w.wafer_yield)} ({w.dies_pass}/{w.dies_tested} dies)</b></div>
                   <div className="fact"><span>Edge vs center fail</span><b>{pct(w.edge_fail_rate)} vs {pct(w.center_fail_rate)}</b></div>
                   <div className="fact"><span>Failing bins</span><b>{binCounts.map(([b, n]) => `${b} ${n}`).join(' · ') || '—'}</b></div>

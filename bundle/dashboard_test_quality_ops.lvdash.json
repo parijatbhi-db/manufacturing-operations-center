@@ -1929,7 +1929,7 @@
               "frame": {
                 "showTitle": true,
                 "title": "Classifier vs Engineer Review",
-                "description": "Agreement of the rule-based classifier with yield-engineer labels on reviewed wafers",
+                "description": "Agreement of the ML pattern classifier (cross-validated) with yield-engineer labels on reviewed wafers",
                 "showDescription": true
               }
             }

@@ -6,7 +6,9 @@ import { IconExternal, IconRefresh } from './Icons';
 const TASK_LABELS: Record<string, string> = {
   generate_data: 'Generate STDF wafer-sort files',
   ingest_raw: 'Lakeflow ingest (Auto Loader + expectations)',
-  sql_transformations: 'Silver / gold + wafer-map patterns',
+  sql_transformations: 'Silver / gold + wafer-map features',
+  wafer_ml: 'Train + score wafer anomaly and pattern models',
+  wafer_patterns_gold: 'Wafer-pattern gold tables from model output',
   refresh_lakebase: 'Refresh Lakebase serving tables',
   export_kb_docs: 'Regenerate Knowledge Assistant docs',
   sync_agent_bricks: 'Sync Knowledge Assistant + Supervisor Agent',

@@ -38,6 +38,8 @@ sync:
   - utils.py
   - generate_data.py
   - transformations.sql
+  - wafer_ml.py
+  - wafer_patterns.sql
   - export_kb_docs.py
   - refresh_lakebase.py
   - pipelines/stdf_ingest.sql
@@ -75,7 +77,7 @@ resources:
   jobs:
     demo_workflow:
       name: '[mfg_ops] STDF pipeline - ingest, transform, serve'
-      description: Generates STDF wafer-sort data, ingests it with Lakeflow, builds silver/gold + wafer-map patterns, refreshes Lakebase serving tables, the KA corpus and the agents.
+      description: Generates STDF wafer-sort data, ingests it with Lakeflow, builds silver/gold, trains and scores the wafer-map anomaly and pattern models, refreshes Lakebase serving tables, the KA corpus and the agents.
       tasks:
       - task_key: generate_data
         spark_python_task:
@@ -109,9 +111,35 @@ resources:
             catalog: ${var.catalog}
             schema: ${resources.schemas.mfg_ops.name}
         max_retries: 1
-      - task_key: export_kb_docs
+      - task_key: wafer_ml
         depends_on:
         - task_key: sql_transformations
+        spark_python_task:
+          python_file: ./wafer_ml.py
+          source: WORKSPACE
+          parameters:
+          - --catalog
+          - ${var.catalog}
+          - --schema
+          - ${resources.schemas.mfg_ops.name}
+          - --experiment
+          - ${var.workspace_path}/wafer_ml_experiment
+        environment_key: ml
+        max_retries: 1
+      - task_key: wafer_patterns_gold
+        depends_on:
+        - task_key: wafer_ml
+        sql_task:
+          file:
+            path: ./wafer_patterns.sql
+          warehouse_id: ${resources.sql_warehouses.mfg_ops_wh.id}
+          parameters:
+            catalog: ${var.catalog}
+            schema: ${resources.schemas.mfg_ops.name}
+        max_retries: 1
+      - task_key: export_kb_docs
+        depends_on:
+        - task_key: wafer_patterns_gold
         spark_python_task:
           python_file: ./export_kb_docs.py
           source: WORKSPACE
@@ -126,7 +154,7 @@ resources:
         max_retries: 1
       - task_key: refresh_lakebase
         depends_on:
-        - task_key: sql_transformations
+        - task_key: wafer_patterns_gold
         spark_python_task:
           python_file: ./refresh_lakebase.py
           source: WORKSPACE
@@ -169,6 +197,12 @@ resources:
           dependencies:
           - databricks-sdk>=0.81.0
           - pg8000>=1.31
+      - environment_key: ml
+        spec:
+          client: '3'
+          dependencies:
+          - mlflow>=3.1
+          - scikit-learn>=1.5
   dashboards:
     test_quality_ops:
       display_name: Semiconductor Test Quality and Throughput

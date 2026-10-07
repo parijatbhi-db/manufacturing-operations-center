@@ -73,12 +73,12 @@
 2. **Weekly Wafer Pattern Mix:**
    > "Normally you see a background of a few patterned wafers a week: a scratch here, a center hot spot there. The week of **August 18th, Edge-Ring spikes**."
 3. **Patterned Wafers by Tester:**
-   > "And the Edge-Ring wafers aren't spread across the floor. They're on **TST-AUS-05, 03 and 04**, the three testers that got the new probe card. Every one of the 28 incident Edge-Ring wafers ran on **PC-AUS-447**."
+   > "And the Edge-Ring wafers aren't spread across the floor. They're on **TST-AUS-05, 03 and 04**, the three testers that got the new probe card. Every one of the 30 incident Edge-Ring wafers ran on **PC-AUS-447**."
 4. **Wafer Map** (defaults to `MX7-F12-W27-W01`):
    > "Here's one of them: wafer 1 of lot MX7-F12-W27, probed on TST-AUS-05 on the 18th, at 83.6% yield. You can see the ring. Almost **40% of edge dies fail**, against about 10% in the center, and most edge failures are HB_021. That's a classic probe-card planarity or contact signature. The card isn't landing cleanly at the edge of the wafer."
    - *Optional:* switch the wafer filter to any `None`-class wafer from the table for contrast.
 5. **Classifier vs Engineer Review:**
-   > "How much should you trust the classifier? Yield engineers labeled 521 wafers by eye, and the classifier agrees on **93%**, with 37 of 40 on Edge-Ring. It's deliberately an explainable rule set in SQL: radial zone fail rates, cluster shape, angular concentration. An engineer can read exactly why a wafer was called Edge-Ring. Swapping in an ML model later is a drop-in, because the labeled training set is already in the lakehouse."
+   > "How much should you trust the classifier? Yield engineers labeled 521 wafers by eye. The ML classifier, a random forest trained on those labels and registered in Unity Catalog, agrees on **97%**, scored on wafers it never saw during training, and on all 40 Edge-Ring wafers. The hand-written rules we started with got 93% on the same wafers. Next to it, an unsupervised anomaly detector scores how unusual every map is, so a wafer that matches no known pattern still lands in the engineers' queue."
 
 **10-minute cut:** skip step 5 here, and skip section 5 (Genie) entirely.
 
@@ -93,7 +93,7 @@
 1. **Filter the queue:** Pattern = **Edge-Ring**, Site = **AUS**.
    > "Here's the Edge-Ring queue at Austin: the PC-AUS-447 wafers we just found on the dashboard."
 2. **Select a wafer**, e.g. `MX7-F12-W27-W01`.
-   > "The die map renders straight from Postgres: 529 dies, 87 failing, ringed around the edge, mostly HB_021. Same wafer, same evidence, but now in an operational tool."
+   > "The die map renders straight from Postgres: 529 dies, 87 failing, ringed around the edge, mostly HB_021. Same wafer, same evidence, but now in an operational tool. The facts panel shows what the models said: Edge-Ring at 99.8% confidence, and an anomaly score of 0.65, well above the flag threshold."
 3. **Record a disposition:** type a note such as *"PC-AUS-447 pulled for planarity check"* and click **Hold**.
    > "That's a real write to Postgres, an OLTP transaction recorded with my identity and a timestamp, not a ticket in another system. It shows in the history immediately, and the wafer stays in the open queue until someone releases, re-probes or scraps it."
 4. *Optional:* switch the status filter to **All flagged** to show dispositioned wafers.
@@ -214,9 +214,10 @@ Optional follow-ups:
 | Retest rate | 2.5% → 9.5% |
 | AUS MX-7 UPH | ~590 → ~400 |
 | Incident cost (Aug 18–27, AUS MX-7) | ~1,100 lost dies, ~$17.6K |
-| Edge-Ring incident wafers | 28 (TST-AUS-05: 14, -03: 8, -04: 6), all PC-AUS-447 |
+| Edge-Ring incident wafers | 30 (TST-AUS-05: 14, -03: 8, -04: 8), all PC-AUS-447 |
 | Showcase wafer | MX7-F12-W27-W01: 83.6% yield, 39.5% edge fail vs 10.1% center |
-| Classifier agreement | 93.1% of 521 reviewed wafers |
+| Classifier agreement | 97.1% of 521 reviewed wafers, cross-validated (rules baseline 93.1%) |
+| Anomaly detector | ROC AUC 0.988; 379 of 1,200 wafers flagged |
 | Onset / recovery | 2025-08-18 07:30 / 2025-08-24 22:15 |
 | Lakebase reads (serverless) | queue ~5 ms, one wafer's 529-die map ~9 ms |
 | Lakeflow ingest | 565,856 PRR + 487,320 PTR rows, 0 dropped by expectations |

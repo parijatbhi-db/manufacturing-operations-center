@@ -29,7 +29,7 @@ The story is a realistic yield excursion. A fictional company, KARI Semiconducto
 | **Lakeflow**: ingest the raw data | A Lakeflow Spark Declarative Pipeline (`[mfg_ops] STDF raw ingestion (Lakeflow)`) streams the STDF parquet files from the UC volume with Auto Loader into five bronze streaming tables, with data-quality expectations. A Lakeflow Job orchestrates the end-to-end refresh. |
 | **Unity Catalog**: govern it | Every table, metric view, volume, synced table and the Lakebase online views live in `parijat_demos.mfg_ops`, with lineage from raw die results to the pattern class and the metric views. |
 | **Lakebase**: operational serving | Lakebase project `parijat-mfg-ops`. Gold wafer patterns and die maps are synced into Postgres (`mfg_ops.lb_*`), and the app's Wafer Operations desk reads them in milliseconds. Engineer dispositions are written back to `wafer_ops.wafer_dispositions`. |
-| **ML or GenAI**: make it intelligent | Agent Bricks Knowledge Assistant (grounded on a pipeline-generated corpus) and a multi-agent Supervisor that combines it with Genie. Wafer maps are classified with an explainable pattern model. |
+| **ML or GenAI**: make it intelligent | Agent Bricks Knowledge Assistant (grounded on a pipeline-generated corpus) and a multi-agent Supervisor that combines it with Genie. Wafer maps are scored by two UC-registered ML models: an Isolation Forest anomaly detector and a random-forest pattern classifier (97.1% cross-validated agreement with engineer labels, against 93.1% for the earlier rules). |
 | **Genie**: natural-language queries | Genie space on seven governed metric views, with instructions and 11 verified example SQLs. |
 | **Databricks App**: surface it to the business | `mfg-ops-center`, with tabs for Dashboard, Wafer Operations (Lakebase), Genie, Supervisor Agent and Data Pipeline (run status and on-demand refresh). |
 
@@ -58,7 +58,7 @@ flowchart LR
     G[generate_data.py<br/>synthetic STDF sort sessions] --> V[(Volume<br/>mfg_ops.raw_data)]
     V --> R[Lakeflow pipeline<br/>Auto Loader + expectations<br/>raw_stdf_* streaming tables]
     R --> S[transformations.sql<br/>silver -> gold]
-    S --> W[wafer-map features<br/>+ pattern classifier]
+    S --> W[wafer-map features<br/>+ ML anomaly & pattern models]
     S --> MV[mv_stdf_* metric views]
     W --> MV
     S --> E[export_kb_docs.py<br/>data dictionary + CSVs]
@@ -84,7 +84,9 @@ The job has no schedule; it is run on demand from the app's **Data Pipeline** ta
 |---|------|---------|--------------|
 | 1 | `generate_data` | Serverless Python | Simulates about 1,200 wafer-sort sessions (Jun 15–Oct 5 2025) and writes parquet files to the `raw_data` volume |
 | 2 | `ingest_raw` | Lakeflow pipeline (serverless) | Auto Loader streams the files into five `raw_stdf_*` streaming tables with expectations. Runs as a full refresh because the generator rewrites the whole synthetic dataset each time |
-| 3 | `sql_transformations` | SQL warehouse `parijat-mfg-ops` | Builds the silver and gold layers, wafer-map features and classification, and seven metric views. Parameterized by `catalog` / `schema` |
+| 3 | `sql_transformations` | SQL warehouse `parijat-mfg-ops` | Builds the silver and gold layers, the per-wafer spatial features (`silver_wafer_features`) and six metric views. Parameterized by `catalog` / `schema` |
+| 3a | `wafer_ml` | Serverless Python (`mlflow>=3.1`, `scikit-learn>=1.5`) | Trains the anomaly detector and pattern classifier, registers both in UC as `@prod`, and scores every wafer into `gold_wafer_pattern_predictions` and `gold_wafer_model_metrics` |
+| 3b | `wafer_patterns_gold` | SQL warehouse `parijat-mfg-ops` | Builds `gold_wafer_patterns`, the weekly and eval tables and `mv_stdf_wafer_patterns` from the model output |
 | 4a | `refresh_lakebase` | Serverless Python (`databricks-sdk>=0.81`, `pg8000`) | Snapshot-refreshes the two Lakebase synced tables and grants the app's service principal read access to the synced schema |
 | 4b | `export_kb_docs` | Serverless Python | Regenerates the KA corpus (data dictionary from UC table comments, columns and sample rows, plus gold CSV extracts) |
 | 5 | `sync_agent_bricks` | Serverless Python | Points the KA at the regenerated docs (swapping out stale sources) and re-syncs it. Creates the MAS if it is missing |
@@ -165,9 +167,12 @@ Each table adds `_source_file` and `_ingested_at`. Expectations drop rows with m
 | Table | Purpose |
 |---|---|
 | `gold_wafer_map_dies` | Die-level map: `die_x`, `die_y`, `r_norm` (0 = center, 1 = edge), `theta`, radial zone, bin label |
-| `gold_wafer_patterns` | One row per wafer: spatial features, `pattern_class`, `likely_cause`, sort context and engineer label |
+| `silver_wafer_features` | One row per wafer: spatial features (model inputs), the rules baseline `rule_pattern_class`, and the engineer label |
+| `gold_wafer_pattern_predictions` | Model output per wafer: `pattern_class`, `pattern_confidence`, `anomaly_score`, `is_anomalous`, cross-validated prediction for reviewed wafers, model versions |
+| `gold_wafer_model_metrics` | Classifier CV accuracy, macro F1 and per-class recall; the rules baseline on the same wafers; anomaly ROC AUC, precision, recall, threshold and wafers flagged |
+| `gold_wafer_patterns` | One row per wafer: sort context, spatial features, ML `pattern_class` + `pattern_confidence`, `anomaly_score` + `is_anomalous`, `likely_cause`, rules baseline and engineer label |
 | `gold_wafer_pattern_weekly` | Wafer counts, average yield and failed dies by week/site/product/pattern |
-| `gold_wafer_pattern_eval` | Confusion matrix of classifier vs engineer label |
+| `gold_wafer_pattern_eval` | Confusion matrix of the classifier's cross-validated prediction vs engineer label |
 
 ### Metric views (Genie data sources)
 
@@ -238,54 +243,69 @@ Incident cost is about 1,100 additional lost dies and about $17.6K over Aug 18�
 
 ---
 
-## 5. Wafer-map pattern classification
+## 5. Wafer-map anomaly detection and pattern classification
 
-The classifier is a deterministic, explainable rule set implemented in SQL (`gold_wafer_patterns`). The pattern classes follow the **WM-811K** taxonomy.
+Two scikit-learn models, trained and scored by the `wafer_ml` job task (`bundle/wafer_ml.py`), replace the earlier rule set. Both are registered in Unity Catalog with alias `@prod`:
 
-### Features (per wafer)
+| Model | UC name | Type | Output |
+|---|---|---|---|
+| Anomaly detector | `parijat_demos.mfg_ops.wafer_anomaly_detector` | Isolation Forest (500 trees), unsupervised, fit on all 1,200 wafers | `anomaly_score` (higher = more unusual map), `is_anomalous` |
+| Pattern classifier | `parijat_demos.mfg_ops.wafer_pattern_classifier` | Random forest (500 trees, balanced class weights), trained on the 521 engineer-reviewed wafers | `pattern_class` (WM-811K taxonomy), `pattern_confidence` |
 
-| Feature | Meaning |
+The two answer different questions. The anomaly detector asks "is this map unusual?" without knowing any pattern names, so it also catches maps that match no known pattern. The classifier asks "which known pattern is it?". Of the 1,200 wafers, 91 are classified None or Random but flagged as anomalous. The Wafer Operations queue includes them so an engineer can look.
+
+### Flow
+
+1. `transformations.sql` builds `silver_wafer_features`: the spatial features below, plus `rule_pattern_class` (the former rule set, kept only as a baseline).
+2. `wafer_ml.py` adds further features from `gold_wafer_map_dies` and trains both models:
+   - The classifier compares two candidates (histogram gradient boosting and random forest) with stratified 5-fold cross-validation, keeps the one with the higher macro F1, and refits it on all labels.
+   - The Isolation Forest is fit without labels. Its flag threshold is the score that maximises F1 when separating labelled `None` wafers from patterned ones.
+   - Both are logged to the MLflow experiment `/Users/parijat.bhide@databricks.com/semi_stdf/wafer_ml_experiment` and registered. Every wafer is then scored by loading `models:/…@prod` back from the registry.
+   - It writes `gold_wafer_pattern_predictions` (per wafer) and `gold_wafer_model_metrics` (evaluation).
+3. `wafer_patterns.sql` (task `wafer_patterns_gold`) joins sort context, features and predictions into `gold_wafer_patterns`, then builds `gold_wafer_pattern_weekly`, `gold_wafer_pattern_eval` and the `mv_stdf_wafer_patterns` metric view.
+
+### Features (55 per wafer)
+
+| Group | Features |
 |---|---|
-| Zone fail rates | Center (r<0.35), inner (0.35–0.65), outer (0.65–0.82) and edge (≥0.82) of the normalized radius |
-| `spatial_chi2_ratio` | Chi-square dispersion of fail counts across 25 ring/sector cells. About 1 means spatially random |
-| `n_clustered_fail` | Failing dies with ≥2 failing 8-neighbors (filters out isolated random defects) |
-| `cluster_excess` | Clustered fails divided by the count expected from random defects at the same fail rate |
-| `clustered_mean_r` | Mean normalized radius of clustered fails |
-| `clustered_elongation` | Ratio of principal-axis variances of clustered fails (high for scratches) |
-| `edge_fail_angular_conc` / `inner_fail_angular_conc` | Mean resultant length of fail angles (0 = spread out, 1 = one direction) |
-
-### Decision rules (in order)
-
-1. A fail rate of ≥50% is **Near-full**.
-2. Fewer than 5 clustered fails, or no spatial structure (chi² < 2 **and** cluster excess < 2), gives **Random** if the fail rate is ≥8%, and **None** otherwise.
-3. If clustered fails sit at the edge (mean r ≥ 0.75), the result is **Edge-Loc** when they are angularly concentrated (≥0.5) and **Edge-Ring** otherwise.
-4. Elongated clusters (elongation ≥15, ≥6 dies) are **Scratch**.
-5. If the center zone has the highest fail rate and the clusters are central, the result is **Center**.
-6. A mid-radius ring that is not angularly concentrated is **Donut**.
-7. Anything else is **Loc**.
+| Zone fail rates | Overall, center (r<0.35), inner (0.35–0.65), outer (0.65–0.82) and edge (≥0.82) of the normalized radius |
+| Spatial structure | `spatial_chi2_ratio` (dispersion across 25 ring/sector cells, ~1 = random), `n_clustered_fail` (fails with ≥2 failing 8-neighbours), `cluster_excess` (vs random expectation), `clustered_mean_r`, `clustered_elongation` |
+| Angular | `edge_fail_angular_conc`, `inner_fail_angular_conc` (0 = spread out, 1 = one direction) |
+| Radial profile | Fail rate in 10 radial bins |
+| Ring/sector | Fail rates in 8 sectors for each of 3 outer rings, **sorted within the ring** so the features don't depend on where around the wafer a pattern sits, plus each ring's peak-to-mean ratio |
+| Largest blob | Size, share of fails, elongation, length along the main axis and mean radius of the largest 8-connected blob of failing dies, plus the count of blobs with ≥3 dies |
 
 ### Accuracy vs engineer labels
 
-Agreement is 93.1% across 521 reviewed wafers.
+The classifier is scored with out-of-fold predictions, so each reviewed wafer is predicted by a model that never saw its label. The rules baseline is scored on the same 521 wafers.
 
-| Label | Correct / reviewed |
-|---|---|
-| None | 338 / 346 |
-| Edge-Ring | 37 / 40 |
-| Edge-Loc | 33 / 34 |
-| Center | 26 / 30 |
-| Random | 21 / 25 |
-| Donut | 14 / 17 |
-| Scratch | 7 / 8 |
-| Loc | 9 / 21 (weakest; near-center blobs are called Center) |
+| Label | Reviewed | Classifier (CV) | Rules baseline |
+|---|---|---|---|
+| **Overall accuracy** | 521 | **97.1%** | 93.1% |
+| **Macro F1** | | **0.938** | 0.832 |
+| None | 346 | 346 | 338 |
+| Edge-Ring | 40 | 40 | 37 |
+| Edge-Loc | 34 | 32 | 33 |
+| Center | 30 | 29 | 26 |
+| Random | 25 | 21 | 21 |
+| Loc | 21 | 14 | 9 |
+| Donut | 17 | 17 | 14 |
+| Scratch | 8 | 7 | 7 |
 
-Of the incident wafers, 28 of 31 on TST-AUS-03..05 are classified Edge-Ring, and all 28 ran on probe card PC-AUS-447.
+Anomaly detector: ROC AUC **0.988** for separating patterned from `None` wafers. At the threshold (0.4255), precision is 92.7% and recall 93.7%; 379 of 1,200 wafers are flagged.
 
-### Why rules rather than ML (for now)
+Of the 37 wafers sorted on TST-AUS-03..05 during the incident window, the classifier calls 30 Edge-Ring (the rules called 28), all on probe card PC-AUS-447. That matches the 30 engineers labelled Edge-Ring. 31 of the 37 are flagged anomalous.
 
-- **Explainable:** every class traces to named features that a yield engineer recognizes, and the reasoning is visible in SQL.
-- **No model ops:** classification is just another gold table, so there is nothing to train, register or serve. The pipeline stays a single SQL step.
-- **Ready for an ML upgrade:** `gold_wafer_map_dies` plus `silver_wafer_review_labels` already form a labeled training set. A next step is a CNN or gradient-boosted classifier tracked in MLflow, registered in UC and scored as a pipeline task, with `gold_wafer_pattern_eval` as the comparison harness.
+### Iteration
+
+The first version, with only the SQL features plus the radial and sector profiles, reached 96.2% CV accuracy but caught only 2 of 8 Scratch wafers, against the rules' 7. The rules have a dedicated elongation threshold, but the model saw elongation only as an aggregate over all clustered fails. Adding the largest-blob shape features brought Scratch to 7/8 and Loc from 11 to 14 of 21.
+
+### Limitations
+
+- **Small classes:** Scratch has 8 labels and Loc 21, so their recall estimates are noisy. Loc is still the weakest class.
+- **No Near-full:** no reviewed wafer carries the Near-full label, so the classifier never predicts it.
+- **Threshold uses labels:** the anomaly model is unsupervised, but its threshold is calibrated on the labelled wafers.
+- **Retrained every run:** each job run registers a new version of both models and moves `@prod` to it. Because the generator is deterministic, metrics are identical across runs. With real data, add a promotion gate (for example, only move `@prod` if CV macro F1 doesn't drop).
 
 ---
 
@@ -295,7 +315,7 @@ The analytical layer answers "what happened"; the Wafer Operations desk is where
 
 | Object (Postgres, database `databricks_postgres`) | Source / owner | Purpose |
 |---|---|---|
-| `mfg_ops.lb_wafer_patterns` | Synced from `gold_wafer_patterns` (PK `wafer_id`) | Queue of flagged wafers with pattern class, likely cause, equipment and yield |
+| `mfg_ops.lb_wafer_patterns` | Synced from `gold_wafer_patterns` (PK `wafer_id`) | Queue of wafers with a systematic pattern or an anomalous map: ML pattern class and confidence, anomaly score, likely cause, equipment and yield |
 | `mfg_ops.lb_wafer_map_dies` | Synced from `gold_wafer_map_dies` (PK `wafer_id, die_x, die_y`) | Die-level map for any wafer |
 | `wafer_ops.wafer_dispositions` | Created and owned by the app's service principal | Write-back: Hold / Re-probe / Release / Scrap, note, user and timestamp |
 
@@ -398,7 +418,7 @@ The Genie API rejects tables that don't exist yet, so the first deploy needs two
 | On-demand refresh from the app, no schedule | No idle cost for a demo; the refresh is visible to the business user | Data only changes when someone presses Refresh |
 | Catalog/schema as bundle variables, passed as task and SQL parameters | Retarget the whole demo with one variable | The Genie JSON keeps fully-qualified names, which Genie requires |
 | Whole-wafer sort sessions instead of random die sampling | Gives real wafer maps and realistic UPH (~600 vs ~2 before) | About 1.7× more PRR rows |
-| Rule-based SQL classifier | Explainable, no model ops, runs in the SQL task | Loc accuracy is weaker. ML is the planned upgrade |
+| ML anomaly detector + pattern classifier, rules kept as baseline | Higher agreement with engineers (97.1% vs 93.1%), and the anomaly score surfaces unusual maps that match no known pattern | Adds an ML task and two registered models. Small classes (Scratch, Loc) have noisy estimates |
 | KA corpus generated from UC metadata | Docs can't drift from tables | The data dictionary is generic rather than hand-written prose |
 | Bind existing Genie, KA and MAS IDs instead of recreating them | The app, MAS wiring and OAuth consent keep working | Requires the direct engine and a two-pass bootstrap |
 | Die-weighted FPY measure | Correct aggregation across foundries and days | Differs slightly from naive averages in older screenshots |
@@ -409,6 +429,6 @@ The Genie API rejects tables that don't exist yet, so the first deploy needs two
 
 - **Data:** the data is synthetic (no real STDF parsing). The workspace has a separate `parijat_demos.manufacturing.stdf_input` volume of binary `.stdf` files that could feed a real parser (e.g. pySTDF on Lakeflow) into the same `raw_stdf_*` contract.
 - **Business impact measure:** `mv_stdf_business_impact` uses `MAX()` over per-site cumulative columns. It is correct only when grouped by site, and should be rebuilt on a daily (non-cumulative) loss table.
-- **ML classifier:** train one on `gold_wafer_map_dies` + labels and compare it in `gold_wafer_pattern_eval`.
+- **ML models:** add a promotion gate before `@prod` moves, try a CNN on the raw die grid, and collect more Scratch and Loc labels.
 - **Alerting:** add SQL alerts or Lakehouse Monitoring on daily Edge-Ring rate per probe card, which would have flagged PC-AUS-447 within hours.
 - **Spatial drill-through:** link a wafer row in the dashboard to the map, and add PT_0210 die heatmaps per wafer.

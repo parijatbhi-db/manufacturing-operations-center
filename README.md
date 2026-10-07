@@ -34,7 +34,7 @@ The MAS routes between the KA (definitions, change-log context) and the Genie sp
 
 ## Docs
 
-- [Design document](docs/DESIGN.md): architecture, data model, wafer-map classifier, decisions
+- [Design document](docs/DESIGN.md): architecture, data model, wafer-map ML models, decisions
 - [Demo talk track](docs/TALK_TRACK.md): 20-minute script, Q&A, key numbers
 - [Build evidence](evidence/README.md): logged job run, executed verification notebook with outputs, Genie/agent answers, bundle and app state
 
@@ -52,7 +52,9 @@ databricks bundle run demo_workflow -p DEFAULT
 The bundle owns `parijat_demos.mfg_ops` end to end — it is the single source of truth for every downstream asset. The job runs:
 1. `generate_data` — synthetic STDF wafer-sort sessions (complete die maps per wafer, with injected spatial patterns) → parquet files in the `raw_data` volume
 2. `ingest_raw` — Lakeflow Declarative Pipeline: Auto Loader streams the files into `raw_stdf_*` streaming tables with data-quality expectations
-3. `sql_transformations` — silver → gold (`transformations.sql`), wafer-map pattern classification (`gold_wafer_patterns`), and the `mv_stdf_*` metric views used by Genie
+3. `sql_transformations` — silver → gold (`transformations.sql`), per-wafer spatial features (`silver_wafer_features`), and the `mv_stdf_*` metric views used by Genie
+   - `wafer_ml` — trains and registers the wafer anomaly detector and pattern classifier in UC (`wafer_ml.py`) and scores every wafer
+   - `wafer_patterns_gold` — builds `gold_wafer_patterns` and the wafer-pattern metric view from the model output (`wafer_patterns.sql`)
 4. `refresh_lakebase` — snapshot-refreshes the Lakebase synced tables and grants the app's service principal read access
 5. `export_kb_docs` — regenerates the KA corpus (data dictionary + gold CSVs) in `/Volumes/parijat_demos/mfg_ops/raw_data/docs`
 6. `sync_agent_bricks` — points the KA at that docs folder, re-syncs it, and creates the MAS if missing (`redeploy_agents.py`)
@@ -90,3 +92,4 @@ The dashboard is referenced via env var (Databricks Apps doesn't have a `dashboa
 
 - `app/README.md` — App-only details (server routes, build pipeline, troubleshooting)
 - `bundle/README.md` — Bundle origin (AI Demo Generator), schema, agent brick details
+- `BUILD.md` — Build narrative: AI tools used, timeline, and what changed along the way
