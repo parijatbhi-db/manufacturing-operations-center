@@ -10,7 +10,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install -q "databricks-sdk>=0.81.0" pg8000 tabulate
+# MAGIC %pip install -q "databricks-sdk>=0.81.0" "mlflow>=3.1" pg8000 tabulate
 # MAGIC %restart_python
 
 # COMMAND ----------
@@ -145,25 +145,42 @@ show('SELECT change_time, site, tester_id, change_type, ecr_id, details FROM gol
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ## 5. Wafer-map pattern classification (ML-style feature rules vs. engineer review)
+# MAGIC ## 5. ML: wafer-map anomaly detector and pattern classifier (vs. rules baseline and engineer review)
 
 # COMMAND ----------
 
+from mlflow.tracking import MlflowClient
+mlc = MlflowClient(registry_uri='databricks-uc')
+for m in ['wafer_pattern_classifier', 'wafer_anomaly_detector']:
+    mv = mlc.get_model_version_by_alias(f'{CATALOG}.{SCHEMA}.{m}', 'prod')
+    print(f'UC model {CATALOG}.{SCHEMA}.{m}: @prod = version {mv.version}, run {mv.run_id}, created {pd.to_datetime(mv.creation_timestamp, unit="ms")}')
+print()
+print('Model evaluation (pattern_classifier = 5-fold out-of-fold CV on engineer-reviewed wafers; rules_baseline = former rule set on the same wafers)')
 show("""
-  SELECT pattern_class, COUNT(*) AS wafers, ROUND(AVG(wafer_yield), 4) AS avg_yield,
-         ROUND(AVG(edge_fail_rate), 4) AS avg_edge_fail_rate
+  SELECT model, metric, value, model_version, n_wafers FROM gold_wafer_model_metrics
+  WHERE metric IN ('cv_accuracy', 'cv_macro_f1', 'accuracy', 'macro_f1', 'roc_auc', 'precision', 'recall', 'threshold', 'wafers_flagged')
+  ORDER BY model, metric""", n=20)
+print()
+print('Per-class recall: classifier (CV) vs rules baseline')
+show("""
+  SELECT REPLACE(c.metric, 'cv_recall_', '') AS pattern, CAST(c.n_wafers AS INT) AS reviewed,
+         c.value AS classifier_recall, r.value AS rules_recall
+  FROM gold_wafer_model_metrics c
+  JOIN gold_wafer_model_metrics r ON r.model = 'rules_baseline' AND r.metric = REPLACE(c.metric, 'cv_', '')
+  WHERE c.model = 'pattern_classifier' AND c.metric LIKE 'cv_recall_%'
+  ORDER BY reviewed DESC""")
+print()
+show("""
+  SELECT pattern_class, COUNT(*) AS wafers, COUNT_IF(is_anomalous) AS anomalous,
+         ROUND(AVG(pattern_confidence), 3) AS avg_confidence, ROUND(AVG(anomaly_score), 3) AS avg_anomaly_score,
+         ROUND(AVG(wafer_yield), 4) AS avg_yield
   FROM gold_wafer_patterns GROUP BY pattern_class ORDER BY wafers DESC""")
 print()
-agree = spark.sql("""
-  SELECT SUM(wafer_count) FILTER (WHERE is_match) / SUM(wafer_count) AS agreement, SUM(wafer_count) AS reviewed
-  FROM gold_wafer_pattern_eval""").first()
-print(f'Classifier agreement with engineer review: {agree.agreement:.1%} of {agree.reviewed} reviewed wafers\n')
+print('Anomalous maps the classifier calls None/Random (no known pattern) -> sent to the Wafer Operations queue')
 show("""
-  SELECT reviewed_pattern,
-         SUM(wafer_count) AS reviewed,
-         SUM(wafer_count) FILTER (WHERE is_match) AS matched,
-         ROUND(SUM(wafer_count) FILTER (WHERE is_match) / SUM(wafer_count), 3) AS recall
-  FROM gold_wafer_pattern_eval GROUP BY reviewed_pattern ORDER BY reviewed DESC""")
+  SELECT wafer_id, site, tester_id, pattern_class, anomaly_score, wafer_yield
+  FROM gold_wafer_patterns WHERE is_anomalous AND pattern_class IN ('None', 'Random')
+  ORDER BY anomaly_score DESC""", n=5)
 print()
 print('Root-cause signal: Edge-Ring wafers by tester / probe card')
 show("""
@@ -251,9 +268,11 @@ print(counts.to_markdown(index=False))
 # Same queries the app's Wafer Operations tab runs (warm the compute first; it scales to zero)
 pg(f'SELECT 1 FROM {SCHEMA}.lb_wafer_patterns LIMIT 1')
 queue, q_ms = pg(f"""
-  SELECT wafer_id, site, tester_id, probe_card_id, pattern_class, ROUND(wafer_yield::numeric, 3) AS wafer_yield
-  FROM {SCHEMA}.lb_wafer_patterns WHERE pattern_class NOT IN ('None', 'Random')
-  ORDER BY sort_date DESC, wafer_yield ASC LIMIT 300""")
+  SELECT wafer_id, site, tester_id, probe_card_id, pattern_class,
+         ROUND(pattern_confidence::numeric, 3) AS confidence, ROUND(anomaly_score::numeric, 3) AS anomaly_score,
+         is_anomalous, ROUND(wafer_yield::numeric, 3) AS wafer_yield
+  FROM {SCHEMA}.lb_wafer_patterns WHERE (pattern_class NOT IN ('None', 'Random') OR is_anomalous)
+  ORDER BY sort_date DESC, anomaly_score DESC LIMIT 300""")
 dies_df, d_ms = pg(f'SELECT die_x, die_y, bin_label FROM {SCHEMA}.lb_wafer_map_dies WHERE wafer_id = :w',
                    w='MX7-F12-W27-W01')
 print(f'\nWafer queue: {len(queue)} rows in {q_ms:.1f} ms; die map for MX7-F12-W27-W01: {len(dies_df)} dies in {d_ms:.1f} ms')

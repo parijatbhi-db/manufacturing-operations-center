@@ -33,7 +33,6 @@ Resources:
   Postgres projects:
     mfg_ops_lakebase:
       Name: Manufacturing Operations Center
-      URL:  (not deployed)
   Postgres synced tables:
     lb_wafer_map_dies:
       Name: parijat_demos.mfg_ops.lb_wafer_map_dies

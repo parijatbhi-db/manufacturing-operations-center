@@ -1,6 +1,6 @@
 # build_evidence: executed notebook with outputs
 
-Exported from serverless run [655794724582614](https://e2-demo-field-eng.cloud.databricks.com/?o=1444828305810485#job/930846601586432/run/655794724582614) (2026-10-07 00:22:53 UTC, result **SUCCESS**). Re-create with `python evidence/collect_evidence.py`.
+Exported from serverless run [889666768248019](https://e2-demo-field-eng.cloud.databricks.com/?o=1444828305810485#job/510738400014419/run/889666768248019) (2026-10-07 22:33:47 UTC, result **SUCCESS**). Re-create with `python evidence/collect_evidence.py`.
 
 # Build evidence: Manufacturing Operations Center (STDF on `parijat_demos.mfg_ops`)
 
@@ -11,7 +11,7 @@ and the Databricks App. It runs as a one-time serverless job; `evidence/collect_
 exports the run, with its outputs, to `evidence/notebook/`.
 
 ```
-%pip install -q "databricks-sdk>=0.81.0" pg8000 tabulate
+%pip install -q "databricks-sdk>=0.81.0" "mlflow>=3.1" pg8000 tabulate
 %restart_python
 ```
 
@@ -65,7 +65,7 @@ print('Workspace:', w.config.host)
 
 ```
 Run by: parijat.bhide@databricks.com
-Run at: 2026-10-07T00:23:42+00:00
+Run at: 2026-10-07T22:35:07+00:00
 Workspace: https://e2-demo-field-eng.cloud.databricks.com
 ```
 
@@ -104,7 +104,7 @@ print(pd.DataFrame(rows).to_markdown(index=False))
 **Output**
 
 Pipeline: [mfg_ops] STDF raw ingestion (Lakeflow)
-Latest update: 693510a6-3710-4738-a604-bebf808262c3 COMPLETED full_refresh = True 2026-10-06T23:57:51+00:00
+Latest update: 7287330b-0b6d-4900-8ebc-ebee3afc7cfd COMPLETED full_refresh = True 2026-10-07T21:26:46+00:00
 | streaming_table                  |   rows_written |   rows_dropped | expectations (passed / failed)                                                                      |
 |:---------------------------------|---------------:|---------------:|:----------------------------------------------------------------------------------------------------|
 | raw_stdf_raw_equip_change_log    |             29 |              0 | valid_change 29/0                                                                                   |
@@ -131,22 +131,22 @@ show(f'SHOW VOLUMES IN {CATALOG}.{SCHEMA}')
 
 **Output**
 
-| table_type      |   objects | names                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-|:----------------|----------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| FOREIGN         |         2 | lb_wafer_map_dies, lb_wafer_patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| MANAGED         |        25 | event_log_43da7120_297e_4e28_a4de_cc1f19246dda, event_log_68094f6b_27c9_446f_8ecf_ea5eca7fb6a9, event_log_bb686d6e_f137_4d1b_ae5d_924ac9b6629a, gold_bin_mix_weekly, gold_change_log, gold_counter_avg_fpy_14d, gold_counter_avg_retest_14d, gold_counter_avg_uph_7d, gold_counter_total_dies_30d, gold_filters_bridge, gold_impact_cumulative, gold_param_drift_timeseries, gold_test_kpis_daily, gold_throughput_daily, gold_wafer_map_dies, gold_wafer_pattern_eval, gold_wafer_pattern_weekly, gold_wafer_patterns, silver_equip_change_log, silver_lot_wafer_master, silver_stdf_prr_parts, silver_stdf_ptr_params, silver_time_spine, silver_wafer_review_labels, silver_wafer_sort_sessions |
-| METRIC_VIEW     |         7 | mv_stdf_business_impact, mv_stdf_equipment_changes, mv_stdf_failure_bins, mv_stdf_param_drift, mv_stdf_test_yield, mv_stdf_throughput, mv_stdf_wafer_patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| STREAMING_TABLE |         5 | raw_stdf_raw_equip_change_log, raw_stdf_raw_lot_wafer_master, raw_stdf_raw_prr_parts, raw_stdf_raw_ptr_params, raw_stdf_raw_wafer_review_labels                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| table_type      |   objects | names                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|:----------------|----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| FOREIGN         |         2 | lb_wafer_map_dies, lb_wafer_patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| MANAGED         |        28 | event_log_43da7120_297e_4e28_a4de_cc1f19246dda, event_log_68094f6b_27c9_446f_8ecf_ea5eca7fb6a9, event_log_bb686d6e_f137_4d1b_ae5d_924ac9b6629a, gold_bin_mix_weekly, gold_change_log, gold_counter_avg_fpy_14d, gold_counter_avg_retest_14d, gold_counter_avg_uph_7d, gold_counter_total_dies_30d, gold_filters_bridge, gold_impact_cumulative, gold_param_drift_timeseries, gold_test_kpis_daily, gold_throughput_daily, gold_wafer_map_dies, gold_wafer_model_metrics, gold_wafer_pattern_eval, gold_wafer_pattern_predictions, gold_wafer_pattern_weekly, gold_wafer_patterns, silver_equip_change_log, silver_lot_wafer_master, silver_stdf_prr_parts, silver_stdf_ptr_params, silver_time_spine, silver_wafer_features, silver_wafer_review_labels, silver_wafer_sort_sessions |
+| METRIC_VIEW     |         7 | mv_stdf_business_impact, mv_stdf_equipment_changes, mv_stdf_failure_bins, mv_stdf_param_drift, mv_stdf_test_yield, mv_stdf_throughput, mv_stdf_wafer_patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| STREAMING_TABLE |         5 | raw_stdf_raw_equip_change_log, raw_stdf_raw_lot_wafer_master, raw_stdf_raw_prr_parts, raw_stdf_raw_ptr_params, raw_stdf_raw_wafer_review_labels                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
-| table_name                | comment                                                                       |
-|:--------------------------|:------------------------------------------------------------------------------|
-| mv_stdf_business_impact   | Cumulative MX-7 lost dies and cost vs FPY baseline by site.                   |
-| mv_stdf_equipment_changes | Equipment, firmware, probe card and recipe change log.                        |
-| mv_stdf_failure_bins      | Weekly failure hard-bin counts by site and product.                           |
-| mv_stdf_param_drift       | Daily parametric drift (z-score vs pre-event baseline) and limit-breach rate. |
-| mv_stdf_test_yield        | Daily test yield KPIs by site, product and foundry.                           |
-| mv_stdf_throughput        | Daily wafer-sort throughput (UPH) by site and product.                        |
-| mv_stdf_wafer_patterns    | Wafer-map pattern classification per wafer sort session.                      |
+| table_name                | comment                                                                                     |
+|:--------------------------|:--------------------------------------------------------------------------------------------|
+| mv_stdf_business_impact   | Cumulative MX-7 lost dies and cost vs FPY baseline by site.                                 |
+| mv_stdf_equipment_changes | Equipment, firmware, probe card and recipe change log.                                      |
+| mv_stdf_failure_bins      | Weekly failure hard-bin counts by site and product.                                         |
+| mv_stdf_param_drift       | Daily parametric drift (z-score vs pre-event baseline) and limit-breach rate.               |
+| mv_stdf_test_yield        | Daily test yield KPIs by site, product and foundry.                                         |
+| mv_stdf_throughput        | Daily wafer-sort throughput (UPH) by site and product.                                      |
+| mv_stdf_wafer_patterns    | Wafer-map pattern classification (ML classifier) and anomaly scores per wafer sort session. |
 
 | database   | volume_name   |
 |:-----------|:--------------|
@@ -180,8 +180,10 @@ print(pd.DataFrame(counts).to_markdown(index=False))
 | gold_test_kpis_daily             |    781 |
 | gold_throughput_daily            |    577 |
 | gold_wafer_map_dies              | 565856 |
-| gold_wafer_pattern_eval          |     25 |
-| gold_wafer_pattern_weekly        |    380 |
+| gold_wafer_model_metrics         |     25 |
+| gold_wafer_pattern_eval          |     16 |
+| gold_wafer_pattern_predictions   |   1200 |
+| gold_wafer_pattern_weekly        |    379 |
 | gold_wafer_patterns              |   1200 |
 | raw_stdf_raw_equip_change_log    |     29 |
 | raw_stdf_raw_lot_wafer_master    |   1200 |
@@ -193,6 +195,7 @@ print(pd.DataFrame(counts).to_markdown(index=False))
 | silver_stdf_prr_parts            | 565856 |
 | silver_stdf_ptr_params           | 487320 |
 | silver_time_spine                |    113 |
+| silver_wafer_features            |   1200 |
 | silver_wafer_review_labels       |    521 |
 | silver_wafer_sort_sessions       |   1200 |
 
@@ -246,24 +249,41 @@ show('SELECT change_time, site, tester_id, change_type, ecr_id, details FROM gol
 | 2025-08-10 13:00:00 | AUS    | TST-AUS-07  | limits           | ECR-20250810-254 | limits update ID-914; notes include codes PBC-CR-532             |
 | 2025-08-17 13:00:00 | AUS    | TST-AUS-08  | recipe           | ECR-20250817-904 | recipe update ID-572; notes include codes HND-OS-210             |
 
-## 5. Wafer-map pattern classification (ML-style feature rules vs. engineer review)
+## 5. ML: wafer-map anomaly detector and pattern classifier (vs. rules baseline and engineer review)
 
 ```python
+from mlflow.tracking import MlflowClient
+mlc = MlflowClient(registry_uri='databricks-uc')
+for m in ['wafer_pattern_classifier', 'wafer_anomaly_detector']:
+    mv = mlc.get_model_version_by_alias(f'{CATALOG}.{SCHEMA}.{m}', 'prod')
+    print(f'UC model {CATALOG}.{SCHEMA}.{m}: @prod = version {mv.version}, run {mv.run_id}, created {pd.to_datetime(mv.creation_timestamp, unit="ms")}')
+print()
+print('Model evaluation (pattern_classifier = 5-fold out-of-fold CV on engineer-reviewed wafers; rules_baseline = former rule set on the same wafers)')
 show("""
-  SELECT pattern_class, COUNT(*) AS wafers, ROUND(AVG(wafer_yield), 4) AS avg_yield,
-         ROUND(AVG(edge_fail_rate), 4) AS avg_edge_fail_rate
+  SELECT model, metric, value, model_version, n_wafers FROM gold_wafer_model_metrics
+  WHERE metric IN ('cv_accuracy', 'cv_macro_f1', 'accuracy', 'macro_f1', 'roc_auc', 'precision', 'recall', 'threshold', 'wafers_flagged')
+  ORDER BY model, metric""", n=20)
+print()
+print('Per-class recall: classifier (CV) vs rules baseline')
+show("""
+  SELECT REPLACE(c.metric, 'cv_recall_', '') AS pattern, CAST(c.n_wafers AS INT) AS reviewed,
+         c.value AS classifier_recall, r.value AS rules_recall
+  FROM gold_wafer_model_metrics c
+  JOIN gold_wafer_model_metrics r ON r.model = 'rules_baseline' AND r.metric = REPLACE(c.metric, 'cv_', '')
+  WHERE c.model = 'pattern_classifier' AND c.metric LIKE 'cv_recall_%'
+  ORDER BY reviewed DESC""")
+print()
+show("""
+  SELECT pattern_class, COUNT(*) AS wafers, COUNT_IF(is_anomalous) AS anomalous,
+         ROUND(AVG(pattern_confidence), 3) AS avg_confidence, ROUND(AVG(anomaly_score), 3) AS avg_anomaly_score,
+         ROUND(AVG(wafer_yield), 4) AS avg_yield
   FROM gold_wafer_patterns GROUP BY pattern_class ORDER BY wafers DESC""")
 print()
-agree = spark.sql("""
-  SELECT SUM(wafer_count) FILTER (WHERE is_match) / SUM(wafer_count) AS agreement, SUM(wafer_count) AS reviewed
-  FROM gold_wafer_pattern_eval""").first()
-print(f'Classifier agreement with engineer review: {agree.agreement:.1%} of {agree.reviewed} reviewed wafers\n')
+print('Anomalous maps the classifier calls None/Random (no known pattern) -> sent to the Wafer Operations queue')
 show("""
-  SELECT reviewed_pattern,
-         SUM(wafer_count) AS reviewed,
-         SUM(wafer_count) FILTER (WHERE is_match) AS matched,
-         ROUND(SUM(wafer_count) FILTER (WHERE is_match) / SUM(wafer_count), 3) AS recall
-  FROM gold_wafer_pattern_eval GROUP BY reviewed_pattern ORDER BY reviewed DESC""")
+  SELECT wafer_id, site, tester_id, pattern_class, anomaly_score, wafer_yield
+  FROM gold_wafer_patterns WHERE is_anomalous AND pattern_class IN ('None', 'Random')
+  ORDER BY anomaly_score DESC""", n=5)
 print()
 print('Root-cause signal: Edge-Ring wafers by tester / probe card')
 show("""
@@ -274,41 +294,65 @@ show("""
 
 **Output**
 
-| pattern_class   |   wafers |   avg_yield |   avg_edge_fail_rate |
-|:----------------|---------:|------------:|---------------------:|
-| None            |      853 |      0.9630 |               0.0370 |
-| Center          |       71 |      0.9309 |               0.0360 |
-| Edge-Ring       |       61 |      0.8847 |               0.2641 |
-| Edge-Loc        |       60 |      0.9279 |               0.1087 |
-| Random          |       54 |      0.8973 |               0.1042 |
-| Donut           |       41 |      0.9052 |               0.0411 |
-| Scratch         |       35 |      0.9381 |               0.0372 |
-| Loc             |       25 |      0.9385 |               0.0388 |
+UC model parijat_demos.mfg_ops.wafer_pattern_classifier: @prod = version 3, run d6af5869155f4eb4b958f74091cfebc2, created 2026-10-07 21:30:34.662000
+UC model parijat_demos.mfg_ops.wafer_anomaly_detector: @prod = version 3, run 01771357afee4e0e85a4516c1cdb6e5c, created 2026-10-07 21:30:40.100000
 
-Classifier agreement with engineer review: 93.1% of 521 reviewed wafers
+Model evaluation (pattern_classifier = 5-fold out-of-fold CV on engineer-reviewed wafers; rules_baseline = former rule set on the same wafers)
+| model              | metric         |    value |   model_version |   n_wafers |
+|:-------------------|:---------------|---------:|----------------:|-----------:|
+| anomaly_detector   | precision      |   0.9266 |               3 |   521.0000 |
+| anomaly_detector   | recall         |   0.9371 |               3 |   521.0000 |
+| anomaly_detector   | roc_auc        |   0.9882 |               3 |   521.0000 |
+| anomaly_detector   | threshold      |   0.4255 |               3 |   nan      |
+| anomaly_detector   | wafers_flagged | 379.0000 |               3 |  1200.0000 |
+| pattern_classifier | cv_accuracy    |   0.9712 |               3 |   521.0000 |
+| pattern_classifier | cv_macro_f1    |   0.9376 |               3 |   521.0000 |
+| rules_baseline     | accuracy       |   0.9309 |                 |   521.0000 |
+| rules_baseline     | macro_f1       |   0.8320 |                 |   521.0000 |
 
-| reviewed_pattern   |   reviewed |   matched |   recall |
-|:-------------------|-----------:|----------:|---------:|
-| None               |        346 |       338 |   0.9770 |
-| Edge-Ring          |         40 |        37 |   0.9250 |
-| Edge-Loc           |         34 |        33 |   0.9710 |
-| Center             |         30 |        26 |   0.8670 |
-| Random             |         25 |        21 |   0.8400 |
-| Loc                |         21 |         9 |   0.4290 |
-| Donut              |         17 |        14 |   0.8240 |
-| Scratch            |          8 |         7 |   0.8750 |
+Per-class recall: classifier (CV) vs rules baseline
+| pattern   |   reviewed |   classifier_recall |   rules_recall |
+|:----------|-----------:|--------------------:|---------------:|
+| None      |        346 |              1.0000 |         0.9769 |
+| Edge-Ring |         40 |              1.0000 |         0.9250 |
+| Edge-Loc  |         34 |              0.9412 |         0.9706 |
+| Center    |         30 |              0.9667 |         0.8667 |
+| Random    |         25 |              0.8400 |         0.8400 |
+| Loc       |         21 |              0.6667 |         0.4286 |
+| Donut     |         17 |              1.0000 |         0.8235 |
+| Scratch   |          8 |              0.8750 |         0.8750 |
+
+| pattern_class   |   wafers |   anomalous |   avg_confidence |   avg_anomaly_score |   avg_yield |
+|:----------------|---------:|------------:|-----------------:|--------------------:|------------:|
+| None            |      845 |          45 |           0.9710 |              0.3840 |      0.9637 |
+| Center          |       68 |          62 |           0.8810 |              0.4720 |      0.9269 |
+| Edge-Loc        |       65 |          65 |           0.8920 |              0.4780 |      0.9257 |
+| Edge-Ring       |       60 |          60 |           0.9590 |              0.5480 |      0.8822 |
+| Loc             |       48 |          34 |           0.7000 |              0.4420 |      0.9379 |
+| Random          |       47 |          46 |           0.7850 |              0.4970 |      0.9020 |
+| Donut           |       43 |          43 |           0.9460 |              0.5560 |      0.8999 |
+| Scratch         |       24 |          24 |           0.6640 |              0.4740 |      0.9375 |
+
+Anomalous maps the classifier calls None/Random (no known pattern) -> sent to the Wafer Operations queue
+| wafer_id          | site   | tester_id   | pattern_class   |   anomaly_score |   wafer_yield |
+|:------------------|:-------|:------------|:----------------|----------------:|--------------:|
+| MX7-F10-A011-W20  | AUS    | TST-AUS-05  | Random          |          0.6317 |        0.8601 |
+| MX7-F12-A005-W08  | AUS    | TST-AUS-08  | Random          |          0.5902 |        0.8828 |
+| RF22-F12-A004-W05 | AUS    | TST-AUS-05  | Random          |          0.5711 |        0.8700 |
+| MX5-F10-A004-W14  | AUS    | TST-AUS-02  | Random          |          0.5674 |        0.8730 |
+| MX7-F10-A011-W07  | AUS    | TST-AUS-07  | Random          |          0.5603 |        0.8885 |
 
 Root-cause signal: Edge-Ring wafers by tester / probe card
 | tester_id   | probe_card_id   |   edge_ring_wafers |
 |:------------|:----------------|-------------------:|
-| TST-AUS-05  | PC-AUS-447      |                 15 |
+| TST-AUS-05  | PC-AUS-447      |                 16 |
 | TST-AUS-03  | PC-AUS-447      |                 11 |
 | TST-AUS-04  | PC-AUS-447      |                 10 |
-| TST-AUS-08  | PC-AUS-389      |                  4 |
+| TST-HSC-05  | PC-HSC-315      |                  4 |
 | TST-HSC-04  | PC-HSC-210      |                  3 |
-| TST-HSC-05  | PC-HSC-315      |                  3 |
-| TST-AUS-07  | PC-AUS-402      |                  3 |
-| TST-AUS-02  | PC-AUS-389      |                  2 |
+| TST-AUS-08  | PC-AUS-389      |                  3 |
+| TST-AUS-07  | PC-AUS-402      |                  2 |
+| TST-AUS-01  | PC-AUS-402      |                  1 |
 
 ## 6. Metric views (the Genie and dashboard semantic layer)
 
@@ -336,14 +380,14 @@ show("""
 
 | Pattern Class   |   wafers |   avg_yield |
 |:----------------|---------:|------------:|
-| None            |      853 |      0.9630 |
-| Center          |       71 |      0.9309 |
-| Edge-Ring       |       61 |      0.8847 |
-| Edge-Loc        |       60 |      0.9279 |
-| Random          |       54 |      0.8973 |
-| Donut           |       41 |      0.9052 |
-| Scratch         |       35 |      0.9381 |
-| Loc             |       25 |      0.9385 |
+| None            |      845 |      0.9637 |
+| Center          |       68 |      0.9269 |
+| Edge-Loc        |       65 |      0.9257 |
+| Edge-Ring       |       60 |      0.8822 |
+| Loc             |       48 |      0.9379 |
+| Random          |       47 |      0.9020 |
+| Donut           |       43 |      0.8999 |
+| Scratch         |       24 |      0.9375 |
 
 | Site   |   avg_uph |
 |:-------|----------:|
@@ -380,20 +424,20 @@ Pages: Global Filters, Semiconductor Test Quality and Throughput, Wafer Map Patt
 
 | dataset                                |   rows |   seconds |
 |:---------------------------------------|-------:|----------:|
-| Counter: Total Dies Tested (Last 30d)  |      1 |      0.81 |
-| Counter: Avg FPY (Last 14d)            |      1 |      0.49 |
-| Counter: Avg Retest Rate (Last 14d)    |      1 |      0.53 |
-| Daily Test KPIs                        |    781 |      0.61 |
-| Weekly Failure Bin Mix                 |    550 |      1.12 |
-| Parameter Drift Timeseries             |   1731 |      0.66 |
-| Equipment and Recipe Change Log        |     29 |      0.57 |
-| Cumulative Impact (Lost Dies and Cost) |    217 |      0.54 |
-| Wafer Patterns                         |   1200 |      0.5  |
-| Patterned Wafers                       |    293 |      0.58 |
-| Weekly Wafer Pattern Mix               |    247 |      0.83 |
-| Wafer List                             |   1200 |      0.56 |
-| Wafer Map Dies                         |    529 |      0.69 |
-| Classifier vs Engineer Review          |     25 |      0.58 |
+| Counter: Total Dies Tested (Last 30d)  |      1 |      0.74 |
+| Counter: Avg FPY (Last 14d)            |      1 |      0.46 |
+| Counter: Avg Retest Rate (Last 14d)    |      1 |      0.47 |
+| Daily Test KPIs                        |    781 |      0.54 |
+| Weekly Failure Bin Mix                 |    550 |      0.61 |
+| Parameter Drift Timeseries             |   1731 |      0.95 |
+| Equipment and Recipe Change Log        |     29 |      0.56 |
+| Cumulative Impact (Lost Dies and Cost) |    217 |      0.53 |
+| Wafer Patterns                         |   1200 |      0.48 |
+| Patterned Wafers                       |    308 |      0.53 |
+| Weekly Wafer Pattern Mix               |    246 |      0.7  |
+| Wafer List                             |   1200 |      0.52 |
+| Wafer Map Dies                         |    529 |      0.68 |
+| Classifier vs Engineer Review          |     16 |      1.39 |
 
 ## 8. Lakebase operational serving: synced tables and app write-back
 
@@ -427,9 +471,11 @@ print(counts.to_markdown(index=False))
 # Same queries the app's Wafer Operations tab runs (warm the compute first; it scales to zero)
 pg(f'SELECT 1 FROM {SCHEMA}.lb_wafer_patterns LIMIT 1')
 queue, q_ms = pg(f"""
-  SELECT wafer_id, site, tester_id, probe_card_id, pattern_class, ROUND(wafer_yield::numeric, 3) AS wafer_yield
-  FROM {SCHEMA}.lb_wafer_patterns WHERE pattern_class NOT IN ('None', 'Random')
-  ORDER BY sort_date DESC, wafer_yield ASC LIMIT 300""")
+  SELECT wafer_id, site, tester_id, probe_card_id, pattern_class,
+         ROUND(pattern_confidence::numeric, 3) AS confidence, ROUND(anomaly_score::numeric, 3) AS anomaly_score,
+         is_anomalous, ROUND(wafer_yield::numeric, 3) AS wafer_yield
+  FROM {SCHEMA}.lb_wafer_patterns WHERE (pattern_class NOT IN ('None', 'Random') OR is_anomalous)
+  ORDER BY sort_date DESC, anomaly_score DESC LIMIT 300""")
 dies_df, d_ms = pg(f'SELECT die_x, die_y, bin_label FROM {SCHEMA}.lb_wafer_map_dies WHERE wafer_id = :w',
                    w='MX7-F12-W27-W01')
 print(f'\nWafer queue: {len(queue)} rows in {q_ms:.1f} ms; die map for MX7-F12-W27-W01: {len(dies_df)} dies in {d_ms:.1f} ms')
@@ -456,22 +502,23 @@ Postgres: PostgreSQL 17.11 (fcae950) on x86_64-pc-linux-gnu, compiled
 | mfg_ops.lb_wafer_patterns |   1200 |
 | mfg_ops.lb_wafer_map_dies | 565856 |
 
-Wafer queue: 293 rows in 20.0 ms; die map for MX7-F12-W27-W01: 529 dies in 17.0 ms
-| wafer_id         | site   | tester_id   | probe_card_id   | pattern_class   |   wafer_yield |
-|:-----------------|:-------|:------------|:----------------|:----------------|--------------:|
-| MX5-F12-H007-W22 | HSC    | TST-HSC-05  | PC-HSC-210      | Donut           |         0.898 |
-| MX5-F10-A009-W17 | AUS    | TST-AUS-04  | PC-AUS-447      | Donut           |         0.909 |
-| MX7-F12-H013-W12 | HSC    | TST-HSC-01  | PC-HSC-315      | Donut           |         0.911 |
-| MX5-F12-A009-W06 | AUS    | TST-AUS-03  | PC-AUS-447      | Edge-Ring       |         0.884 |
-| MX7-F12-A012-W25 | AUS    | TST-AUS-05  | PC-AUS-447      | Edge-Loc        |         0.932 |
-| MX5-F12-A009-W04 | AUS    | TST-AUS-03  | PC-AUS-447      | Center          |         0.937 |
-| MX7-F10-A012-W03 | AUS    | TST-AUS-05  | PC-AUS-447      | Center          |         0.941 |
-| MX7-F12-A014-W01 | AUS    | TST-AUS-07  | PC-AUS-402      | Donut           |         0.958 |
+Wafer queue: 300 rows in 17.0 ms; die map for MX7-F12-W27-W01: 529 dies in 18.1 ms
+| wafer_id         | site   | tester_id   | probe_card_id   | pattern_class   |   confidence |   anomaly_score | is_anomalous   |   wafer_yield |
+|:-----------------|:-------|:------------|:----------------|:----------------|-------------:|----------------:|:---------------|--------------:|
+| MX5-F12-H007-W22 | HSC    | TST-HSC-05  | PC-HSC-210      | Donut           |        0.998 |           0.585 | True           |         0.898 |
+| MX7-F12-H013-W12 | HSC    | TST-HSC-01  | PC-HSC-315      | Donut           |        0.996 |           0.529 | True           |         0.911 |
+| MX5-F10-A009-W17 | AUS    | TST-AUS-04  | PC-AUS-447      | Center          |        0.312 |           0.498 | True           |         0.909 |
+| MX5-F12-A009-W06 | AUS    | TST-AUS-03  | PC-AUS-447      | Edge-Ring       |        0.942 |           0.528 | True           |         0.884 |
+| MX5-F12-A009-W07 | AUS    | TST-AUS-01  | PC-AUS-389      | None            |        0.74  |           0.451 | True           |         0.943 |
+| MX5-F12-H007-W20 | HSC    | TST-HSC-05  | PC-HSC-210      | Donut           |        0.966 |           0.512 | True           |         0.912 |
+| MX7-F12-A012-W25 | AUS    | TST-AUS-05  | PC-AUS-447      | Edge-Loc        |        0.942 |           0.478 | True           |         0.932 |
+| MX7-F10-A012-W02 | AUS    | TST-AUS-07  | PC-AUS-402      | Random          |        0.502 |           0.441 | True           |         0.93  |
 
 App write-back table wafer_ops.wafer_dispositions (created and owned by the app service principal):
-| wafer_id        | disposition   | pattern_class   | tester_id   | entered_by                   | entered_at                       |
-|:----------------|:--------------|:----------------|:------------|:-----------------------------|:---------------------------------|
-| MX7-F12-W29-W01 | SCRAP         | Edge-Ring       | TST-AUS-04  | parijat.bhide@databricks.com | 2026-10-06 18:38:15.218832+00:00 |
+| wafer_id         | disposition   | pattern_class   | tester_id   | entered_by                   | entered_at                       |
+|:-----------------|:--------------|:----------------|:------------|:-----------------------------|:---------------------------------|
+| MX5-F12-A009-W06 | HOLD          | Edge-Ring       | TST-AUS-03  | parijat.bhide@databricks.com | 2026-10-07 18:21:46.333711+00:00 |
+| MX7-F12-W29-W01  | SCRAP         | Edge-Ring       | TST-AUS-04  | parijat.bhide@databricks.com | 2026-10-06 18:38:15.218832+00:00 |
 
 ## 9. Genie: natural-language questions answered over the metric views
 
@@ -505,28 +552,29 @@ Status: COMPLETED
 Generated SQL:
 SELECT
   `Site`,
-  MEASURE(`First Pass Yield`) AS `First Pass Yield`
+  ROUND(MEASURE(`First Pass Yield`) * 100, 2) AS `First Pass Yield (%)`
 FROM `parijat_demos`.`mfg_ops`.`mv_stdf_test_yield`
-WHERE `Date` > DATE_SUB((SELECT MAX(`Date`) FROM `parijat_demos`.`mfg_ops`.`mv_stdf_test_yield`), 14)
+WHERE `Date` BETWEEN DATE_SUB((SELECT MAX(`Date`) FROM `parijat_demos`.`mfg_ops`.`mv_stdf_test_yield`), 13)
+                  AND (SELECT MAX(`Date`) FROM `parijat_demos`.`mfg_ops`.`mv_stdf_test_yield`)
   AND `Site` IS NOT NULL
 GROUP BY ALL
 ORDER BY `Site` ASC
-| Site   |   First Pass Yield |
-|:-------|-------------------:|
-| AUS    |           0.946639 |
-| HSC    |           0.957541 |
-| PNG    |           0.95071  |
-Genie: Over the last 14 days in the data, first pass yield was **94.66%** at **AUS**, **95.75%** at **HSC**, and **95.07%** at **PNG**. Among the three sites, **HSC** had the highest yield and **AUS** the lowest.
+| Site   |   First Pass Yield (%) |
+|:-------|-----------------------:|
+| AUS    |                  94.66 |
+| HSC    |                  95.75 |
+| PNG    |                  95.07 |
+Genie: Over the last **14 days** in the data, first pass yield was **94.66%** at **AUS**, **95.75%** at **HSC**, and **95.07%** at **PNG**. **HSC** had the highest yield and **AUS** the lowest, with a spread of **1.09 percentage points** across the 3 sites.
 --------------------------------------------------------------------------------
 Q: Which tester and probe card have the most Edge-Ring wafers?
 Status: COMPLETED
 Generated SQL:
-WITH ranked_edge_ring AS (
+WITH `ranked_edge_ring` AS (
   SELECT
     `Tester ID`,
     `Probe Card ID`,
     MEASURE(`Wafer Count`) AS `Edge-Ring Wafers`,
-    RANK() OVER (ORDER BY MEASURE(`Wafer Count`) DESC) AS `wafer_rank`
+    RANK() OVER (ORDER BY MEASURE(`Wafer Count`) DESC) AS `edge_ring_rank`
   FROM `parijat_demos`.`mfg_ops`.`mv_stdf_wafer_patterns`
   WHERE `Pattern Class` = 'Edge-Ring'
     AND `Tester ID` IS NOT NULL
@@ -537,13 +585,13 @@ SELECT
   `Tester ID`,
   `Probe Card ID`,
   `Edge-Ring Wafers`
-FROM ranked_edge_ring
-WHERE `wafer_rank` <= 1
-ORDER BY `Edge-Ring Wafers` DESC, `Tester ID` ASC, `Probe Card ID` ASC
+FROM `ranked_edge_ring`
+WHERE `edge_ring_rank` <= 1
+ORDER BY `Edge-Ring Wafers` DESC, `Tester ID`, `Probe Card ID`
 | Tester ID   | Probe Card ID   |   Edge-Ring Wafers |
 |:------------|:----------------|-------------------:|
-| TST-AUS-05  | PC-AUS-447      |                 15 |
-Genie: The tester and probe card with the most **Edge-Ring** wafers are **Tester ID TST-AUS-05** and **Probe Card ID PC-AUS-447**, with **15 Edge-Ring wafers**. In the returned result set, **15 wafers** is the highest Edge-Ring count shown.
+| TST-AUS-05  | PC-AUS-447      |                 16 |
+Genie: **TST-AUS-05** with probe card **PC-AUS-447** has the most Edge-Ring wafers, with **16** Edge-Ring wafers recorded. In this result set, **TST-AUS-05 / PC-AUS-447** is the top-ranked tester and probe card combination for Edge-Ring wafer count.
 --------------------------------------------------------------------------------
 
 ## 10. GenAI: Knowledge Assistant and Supervisor Agent responses
@@ -573,60 +621,54 @@ for endpoint, question in [
 **Output**
 
 ```
-Endpoint: ka-b49c04e7-endpoint (state READY), answered in 7.6s
+Endpoint: ka-b49c04e7-endpoint (state READY), answered in 6.7s
 Q: What does an Edge-Ring wafer-map pattern usually indicate, and what should a yield engineer check first?
-A: An Edge-Ring wafer-map pattern indicates failures all around the wafer edge, typically caused by probe card planarity/contact issues or bevel etch problems.
+A: An Edge-Ring wafer-map pattern indicates failures all around the wafer edge, typically caused by probe card planarity / contact issues or bevel etch problems.
 
 When encountering an Edge-Ring pattern, a yield engineer should first check:
 
-1. **Probe card condition and planarity** – Edge-Ring patterns are associated with probe card planarity and contact issues, so the probe card should be inspected for wear, contamination, or misalignment.
+1. **Probe card condition and contact quality** – Edge-Ring patterns are associated with probe card planarity and contact issues, so the probe card should be inspected for wear, contamination, or misalignment.
 
-2. **Contact resistance measurements** – In the Austin MX-7 yield anomaly, affected wafers showed elevated PT_0210 contact resistance at the edge, indicating that parametric drift in contact resistance should be monitored.
+2. **Probe card specifications** – Verify that the correct probe card revision is installed and that it matches the equipment configuration.
 
-3. **Recent equipment changes** – The Austin incident was traced to probe card PC-AUS-447 Rev C installation combined with handler firmware HF-3.2.1 deployment on specific testers, so any recent probe card replacements, firmware updates, or tester configuration changes should be reviewed.
+3. **Parametric drift at the edge** – In the context of the Austin MX-7 incident, failing dies were concentrated at the wafer edge in hard bin HB_021 (open/short contact) with elevated PT_0210 contact resistance at the edge, so measuring contact resistance parameters at the wafer edge can help confirm probe card contact degradation.
 
-The Edge-Ring pattern is particularly important to catch early, as it can significantly impact yield (the Austin MX-7 incident caused FPY to drop ~6.8 points from baseline) and reduce throughput due to slower probe indexing.
+4. **Handler and tester firmware** – The Austin incident root cause involved both probe card PC-AUS-447 Rev C installation and handler firmware HF-3.2.1 deployment on testers TST-AUS-03, TST-AUS-04, TST-AUS-05, so firmware versions should also be reviewed if probe card inspection does not reveal the issue.
 --------------------------------------------------------------------------------
-Endpoint: mas-40863b57-endpoint (state READY), answered in 34.3s
+Endpoint: mas-40863b57-endpoint (state READY), answered in 37.9s
 Q: Which tester had the most Edge-Ring wafers, and what is the likely root cause?
-A: I'll help you find which tester had the most Edge-Ring wafers and investigate the likely root cause. Let me start by querying the test data.<name>Genie_Data_Explorer</name>||Tester ID|Edge-Ring Wafer Count|
+A: I'll help you find which tester had the most Edge-Ring wafers and identify the likely root cause. Let me start by querying the test data.<name>Genie_Data_Explorer</name>||Tester ID|Edge-Ring Wafer Count|
 |-|-|-|
-|0|TST-AUS-05|15|
+|0|TST-AUS-05|16|
 |1|TST-AUS-03|11|
 |2|TST-AUS-04|10|
-|3|TST-AUS-08|5|
-|4|TST-AUS-07|3|
-|5|TST-HSC-04|3|
-|6|TST-HSC-05|3|
-|7|TST-AUS-01|2|
-|8|TST-AUS-02|2|
-|9|TST-HSC-06|2|
-|10|TST-PNG-02|2|
+|3|TST-AUS-08|4|
+|4|TST-HSC-04|4|
+|5|TST-HSC-05|4|
+|6|TST-AUS-07|2|
+|7|TST-HSC-06|2|
+|8|TST-PNG-02|2|
+|9|TST-AUS-01|1|
+|10|TST-AUS-02|1|
 |11|TST-AUS-06|1|
 |12|TST-HSC-01|1|
-|13|TST-HSC-03|1|<name>Manufacturing-Operations-Supervisor</name>Now let me search for information about the root cause of Edge-Ring wafer failures.<name>STDF-Test-Quality-KA</name>Edge-Ring failures are caused by probe card planarity/contact issues or bevel etch problems, and they result in failures all around the wafer edge.
+|13|TST-HSC-03|1|<name>Manufacturing-Operations-Supervisor</name>Now let me search the knowledge base for information about Edge-Ring wafer failures and their root causes.<name>STDF-Test-Quality-KA</name>Edge-Ring failures are concentrated all around the wafer edge and are caused by probe card planarity/contact issues or bevel etch problems.
 
-In the context of the documented Austin MX-7 yield anomaly, the Edge-Ring pattern was specifically caused by probe card PC-AUS-447 Rev C installation combined with handler firmware HF-3.2.1 deployment on testers TST-AUS-03, TST-AUS-04, and TST-AUS-05. The failing dies were concentrated at the wafer edge in hard bin HB_021 (open/short contact) with elevated PT_0210 contact resistance at the edge.[^sBfQ-1]
+In the context of a specific incident at KARI Semiconductor, the Austin MX-7 yield anomaly during August 18-27, 2025 was caused by probe card PC-AUS-447 Rev C installation combined with handler firmware HF-3.2.1 deployment on testers TST-AUS-03, TST-AUS-04, and TST-AUS-05, which produced an Edge-Ring wafer-map signature with failing dies concentrated at the wafer edge in hard bin HB_021 (open/short contact) and elevated PT_0210 contact resistance at the edge.[^Ff2n-1]
 
-[^sBfQ-1]: ## Key Event: Austin MX-7 Yield Anomaly - **Period**: August 18-27, 2025 - **Site**: AUS (Austin) - **Product**: MX-7 (lots MX7-F12-W27..W29 from foundry F12 were in sort during the window) - **Root Cause**: Probe card PC-AUS-447 Rev C installation + handler firmware HF-3.2.1 deployment on testers TST-AUS-03, TST-AUS-04, TST-AUS-05 - **Wafer-map signature**: Edge-Ring pattern on affected wafers; failing dies concentrated at the wafer edge in hard bin HB_021 (open/short contact) with elevated PT_0210 contact resistance at the edge - **Impact**: FPY dropped ~6.8 points from baseline (~95.3% to ~88.5%), retest rate rose to 7-9%, slower probe indexing reduced UPH - **Recovery**: Firmware rollback to HF-3.1.9 and probe card recondition on Aug 24 at 22:15, FPY normalized by Sep 1 - **Sites**: AUS (Austin), HSC (Hsinchu), PNG (Penang) - **Products**: MX-5, MX-7, RF-22 - **Foundries**: F10, F12  ## Hard Bins - HB_001 / HB_002: pass bins - HB_014: IDDQ / leakage failure - HB_021: open/short (contact) failure - HB_007: functional failure - HB_032: parametric (Vth) failure  ## Wafer-Map Pattern Classes Every wafer is probed in one sort session, so each wafer has a complete die map.  [stdf_data_dictionary.md](https://e2-demo-field-eng.cloud.databricks.com/ajax-api/2.0/fs/files/Volumes/parijat_demos/mfg_ops/raw_data/docs/stdf_data_dictionary.md#:~:text=%23%23%20Key%20Event%3A%20Austin%20MX-7%20Yield%20Anomaly%0A-%20%2A%2APeriod%2A%2A%3A%20August%2018-27%2C%202025%0A-%20%2A%2ASite%2A%2A%3A%20AUS%20%28Austin%29%0A-%20%2A%2AProduct%2A%2A%3A%20MX-7%20%28lots%20MX7-F12-W27..W29%20from%20foundry%20F12%20were%20in%20sort%20during%20the%20window%29%0A-%20%2A%2ARoot%20Cause%2A%2A%3A%20Probe%20card%20PC-AUS-447%20Rev%20C%20installation%20%2B%20handler%20firmware%20HF-3.2.1%20deployment%20on%20testers%20TST-AUS-03%2C%20TST-AUS-04%2C%20TST-AUS-05%0A-%20%2A%2AWafer-map%20signature%2A%2A%3A%20Edge-Ring%20pattern%20on%20affected%20wafers%3B%20failing%20dies%20concentrated%20at%20the%20wafer%20edge%20in%20hard%20bin%20HB_021%20%28open/short%20contact%29%20with%20elevated%20PT_0210%20contact%20resistance%20at%20the%20edge%0A-%20%2A%2AImpact%2A%2A%3A%20FPY%20dropped%20~6.8%20points%20from%20baseline%20%28~95.3%25%20to%20~88.5%25%29%2C%20retest%20rate%20rose%20to%207-9%25%2C%20slower%20probe%20indexing%20reduced%20UPH%0A-%20%2A%2ARecovery%2A%2A%3A%20Firmware%20rollback%20to%20HF-3.1.9%20and%20probe%20card%20recondition%20on%20Aug%2024%20at%2022%3A15%2C%20FPY%20normalized%20by%20Sep%201%0A-%20%2A%2ASites%2A%2A%3A%20AUS%20%28Austin%29%2C%20HSC%20%28Hsinchu%29%2C%20PNG%20%28Penang%29%0A-%20%2A%2AProducts%2A%2A%3A%20MX-5%2C%20MX-7%2C%20RF-22%0A-%20%2A%2AFoundries%2A%2A%3A%20F10%2C%20F12%0A%0A%23%23%20Hard%20Bins%0A-%20HB_001%20/%20HB_002%3A%20pass%20bins%0A-%20HB_014%3A%20IDDQ%20/%20leakage%20failure%0A-%20HB_021%3A%20open/short%20%28contact%29%20failure%0A-%20HB_007%3A%20functional%20failure%0A-%20HB_032%3A%20parametric%20%28Vth%29%20failure%0A%0A%23%23%20Wafer-Map%20Pattern%20Classes%0AEvery%20wafer%20is%20probed%20in%20one%20sort%20session%2C%20so%20each%20wafer%20has%20a%20complete%20die%20map.%20)<name>Manufacturing-Operations-Supervisor</name>**Tester TST-AUS-05** had the most Edge-Ring wafers with **15 wafers**.
+[^Ff2n-1]: ## Key Event: Austin MX-7 Yield Anomaly - **Period**: August 18-27, 2025 - **Site**: AUS (Austin) - **Product**: MX-7 (lots MX7-F12-W27..W29 from foundry F12 were in sort during the window) - **Root Cause**: Probe card PC-AUS-447 Rev C installation + handler firmware HF-3.2.1 deployment on testers TST-AUS-03, TST-AUS-04, TST-AUS-05 - **Wafer-map signature**: Edge-Ring pattern on affected wafers; failing dies concentrated at the wafer edge in hard bin HB_021 (open/short contact) with elevated PT_0210 contact resistance at the edge - **Impact**: FPY dropped ~6.8 points from baseline (~95.3% to ~88.5%), retest rate rose to 7-9%, slower probe indexing reduced UPH - **Recovery**: Firmware rollback to HF-3.1.9 and probe card recondition on Aug 24 at 22:15, FPY normalized by Sep 1 - **Sites**: AUS (Austin), HSC (Hsinchu), PNG (Penang) - **Products**: MX-5, MX-7, RF-22 - **Foundries**: F10, F12  ## Hard Bins - HB_001 / HB_002: pass bins - HB_014: IDDQ / leakage failure - HB_021: open/short (contact) failure - HB_007: functional failure - HB_032: parametric (Vth) failure  ## Wafer-Map Pattern Classes Every wafer is probed in one sort session, so each wafer has a complete die map.  [stdf_data_dictionary.md](https://e2-demo-field-eng.cloud.databricks.com/ajax-api/2.0/fs/files/Volumes/parijat_demos/mfg_ops/raw_data/docs/stdf_data_dictionary.md#:~:text=%23%23%20Key%20Event%3A%20Austin%20MX-7%20Yield%20Anomaly%0A-%20%2A%2APeriod%2A%2A%3A%20August%2018-27%2C%202025%0A-%20%2A%2ASite%2A%2A%3A%20AUS%20%28Austin%29%0A-%20%2A%2AProduct%2A%2A%3A%20MX-7%20%28lots%20MX7-F12-W27..W29%20from%20foundry%20F12%20were%20in%20sort%20during%20the%20window%29%0A-%20%2A%2ARoot%20Cause%2A%2A%3A%20Probe%20card%20PC-AUS-447%20Rev%20C%20installation%20%2B%20handler%20firmware%20HF-3.2.1%20deployment%20on%20testers%20TST-AUS-03%2C%20TST-AUS-04%2C%20TST-AUS-05%0A-%20%2A%2AWafer-map%20signature%2A%2A%3A%20Edge-Ring%20pattern%20on%20affected%20wafers%3B%20failing%20dies%20concentrated%20at%20the%20wafer%20edge%20in%20hard%20bin%20HB_021%20%28open/short%20contact%29%20with%20elevated%20PT_0210%20contact%20resistance%20at%20the%20edge%0A-%20%2A%2AImpact%2A%2A%3A%20FPY%20dropped%20~6.8%20points%20from%20baseline%20%28~95.3%25%20to%20~88.5%25%29%2C%20retest%20rate%20rose%20to%207-9%25%2C%20slower%20probe%20indexing%20reduced%20UPH%0A-%20%2A%2ARecovery%2A%2A%3A%20Firmware%20rollback%20to%20HF-3.1.9%20and%20probe%20card%20recondition%20on%20Aug%2024%20at%2022%3A15%2C%20FPY%20normalized%20by%20Sep%201%0A-%20%2A%2ASites%2A%2A%3A%20AUS%20%28Austin%29%2C%20HSC%20%28Hsinchu%29%2C%20PNG%20%28Penang%29%0A-%20%2A%2AProducts%2A%2A%3A%20MX-5%2C%20MX-7%2C%20RF-22%0A-%20%2A%2AFoundries%2A%2A%3A%20F10%2C%20F12%0A%0A%23%23%20Hard%20Bins%0A-%20HB_001%20/%20HB_002%3A%20pass%20bins%0A-%20HB_014%3A%20IDDQ%20/%20leakage%20failure%0A-%20HB_021%3A%20open/short%20%28contact%29%20failure%0A-%20HB_007%3A%20functional%20failure%0A-%20HB_032%3A%20parametric%20%28Vth%29%20failure%0A%0A%23%23%20Wafer-Map%20Pattern%20Classes%0AEvery%20wafer%20is%20probed%20in%20one%20sort%20session%2C%20so%20each%20wafer%20has%20a%20complete%20die%20map.%20)<name>Manufacturing-Operations-Supervisor</name>Based on the data analysis and documentation:
 
-**Likely Root Cause:**
+**Tester with Most Edge-Ring Wafers:** TST-AUS-05 had the most Edge-Ring wafers with 16 occurrences, followed by TST-AUS-03 (11 wafers) and TST-AUS-04 (10 wafers).
 
-Based on the incident documentation, Edge-Ring failures are typically caused by:
+**Likely Root Cause:** Edge-Ring failures are caused by **probe card planarity/contact issues or bevel etch problems**. The failures manifest as defects concentrated around the wafer edge.
 
-1. **Probe card planarity/contact issues** - The probe card is not making uniform contact across the wafer, particularly at the edges
-2. **Bevel etch problems** - Issues with the wafer edge preparation
+Notably, the three testers with the highest Edge-Ring wafer counts (TST-AUS-03, TST-AUS-04, and TST-AUS-05) were all involved in a documented incident at KARI Semiconductor's Austin facility during August 18-27, 2025. This incident was specifically caused by:
+- Installation of probe card **PC-AUS-447 Rev C** 
+- Deployment of handler firmware **HF-3.2.1**
 
-In the specific case documented for the Austin facility, the Edge-Ring pattern was caused by the combination of:
-- **Probe card PC-AUS-447 Rev C** installation
-- **Handler firmware HF-3.2.1** deployment
+These changes produced Edge-Ring wafer-map signatures with failing dies at the wafer edge in hard bin HB_021 (open/short contact) and elevated contact resistance (PT_0210) at the edge.
 
-This affected testers TST-AUS-03, TST-AUS-04, and TST-AUS-05 (which aligns with your data showing these three testers having the highest Edge-Ring wafer counts: 15, 11, and 10 respectively). The failures manifested as:
-- Dies concentrated at the wafer edge
-- Hard bin HB_021 (open/short contact)
-- Elevated PT_0210 contact resistance at the edge
-
-The root cause is **probe card contact issues** exacerbated by incompatible handler firmware, leading to poor electrical contact at the wafer periphery.
+The pattern strongly suggests that TST-AUS-05's Edge-Ring failures are related to probe card contact issues, likely stemming from the same probe card or handler firmware configuration that affected the other Austin testers.
 --------------------------------------------------------------------------------
 ```
 
@@ -657,7 +699,7 @@ for run in itertools.islice(w.jobs.list_runs(job_id=JOB_ID), 3):
 ```
 App: mfg-ops-center | https://mfg-ops-center-1444828305810485.aws.databricksapps.com
 App status: RUNNING | compute: ACTIVE
-Active deployment: 01f1c1b48d351980989aa432cf186c56 SUCCEEDED 2026-10-06T18:34:23Z
+Active deployment: 01f1c29781cb1482abd85e2db582894b SUCCEEDED 2026-10-07T21:38:59Z
 Resources:
   - genie-space: genie_space
   - serving-endpoint: serving_endpoint
@@ -666,8 +708,8 @@ Resources:
 User API scopes: ['dashboards.genie', 'serving.serving-endpoints']
 
 Refresh job: [mfg_ops] STDF pipeline - ingest, transform, serve
-  run 968864672363608: SUCCESS 2026-10-06T23:55:55+00:00
-  run 23880951221004: SUCCESS 2026-10-06T01:35:40+00:00
-  run 490954671298243: SUCCESS 2026-10-06T01:03:22+00:00
+  run 295473572818052: SUCCESS 2026-10-07T21:24:17+00:00
+  run 116771708828020: SUCCESS 2026-10-07T21:20:28+00:00
+  run 365411924378167: SUCCESS 2026-10-07T21:17:03+00:00
 ```
 
