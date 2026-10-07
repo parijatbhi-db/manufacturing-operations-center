@@ -1,0 +1,55 @@
+$ databricks bundle validate
+Name: parijat_semi_stdf
+Target: dev
+Workspace:
+  User: parijat.bhide@databricks.com
+  Path: /Users/parijat.bhide@databricks.com/semi_stdf/.bundle/parijat_semi_stdf
+
+Validation OK!
+
+$ databricks bundle summary
+Name: parijat_semi_stdf
+Target: dev
+Workspace:
+  User: parijat.bhide@databricks.com
+  Path: /Users/parijat.bhide@databricks.com/semi_stdf/.bundle/parijat_semi_stdf
+Resources:
+  Dashboards:
+    test_quality_ops:
+      Name: Semiconductor Test Quality and Throughput
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f13ffb2116152b9c57017ac6989369/published?w=1444828305810485
+  Genie Spaces:
+    stdf_genie:
+      Name: STDF Semiconductor Test Quality Analytics
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/genie/rooms/01f1403396011f339af2cb207b69e9b6?w=1444828305810485
+  Jobs:
+    demo_workflow:
+      Name: [mfg_ops] STDF pipeline - ingest, transform, serve
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/jobs/848871296768056?w=1444828305810485
+  Pipelines:
+    stdf_ingest:
+      Name: [mfg_ops] STDF raw ingestion (Lakeflow)
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/pipelines/bb686d6e-f137-4d1b-ae5d-924ac9b6629a?w=1444828305810485
+  Postgres projects:
+    mfg_ops_lakebase:
+      Name: Manufacturing Operations Center
+      URL:  (not deployed)
+  Postgres synced tables:
+    lb_wafer_map_dies:
+      Name: parijat_demos.mfg_ops.lb_wafer_map_dies
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/explore/data/parijat_demos/mfg_ops/lb_wafer_map_dies?w=1444828305810485
+    lb_wafer_patterns:
+      Name: parijat_demos.mfg_ops.lb_wafer_patterns
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/explore/data/parijat_demos/mfg_ops/lb_wafer_patterns?w=1444828305810485
+  SQL Warehouses:
+    mfg_ops_wh:
+      Name: parijat-mfg-ops
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/sql/warehouses/50cb0e5f102813f0?w=1444828305810485
+  Schemas:
+    mfg_ops:
+      Name: mfg_ops
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/explore/data/parijat_demos/mfg_ops?w=1444828305810485
+  Volumes:
+    mfg_ops_raw_data:
+      Name: raw_data
+      URL:  https://e2-demo-field-eng.cloud.databricks.com/explore/data/volumes/parijat_demos/mfg_ops/raw_data?w=1444828305810485

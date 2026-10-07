@@ -10,6 +10,7 @@ Combined repo for the **Manufacturing Operations Center** demo: a Databricks App
 ```
 .
 ├── app/        # Databricks App (React + Vite + Node.js/Express)
+├── evidence/   # Proof the build ran: job run logs, executed notebook outputs, app state
 └── bundle/     # Databricks Asset Bundle - data generation, Lakeflow ingest pipeline,
                 #   transformations, Lakebase project + synced tables, dashboard,
                 #   Genie space, and Agent Bricks (KA + MAS) sync
@@ -35,6 +36,7 @@ The MAS routes between the KA (definitions, change-log context) and the Genie sp
 
 - [Design document](docs/DESIGN.md): architecture, data model, wafer-map classifier, decisions
 - [Demo talk track](docs/TALK_TRACK.md): 20-minute script, Q&A, key numbers
+- [Build evidence](evidence/README.md): logged job run, executed verification notebook with outputs, Genie/agent answers, bundle and app state
 
 ## Deploy from scratch
 

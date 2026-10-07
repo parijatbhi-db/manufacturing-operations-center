@@ -1,0 +1,339 @@
+$ databricks apps logs mfg-ops-center --tail-lines 300
+# captured 2026-10-07T00:26:09+00:00
+2026-10-06T00:26:11Z [BUILD] vite v5.4.21 building for production...
+2026-10-06T00:26:11Z [BUILD] transforming...
+2026-10-06T00:26:19Z [BUILD] ✓ 36 modules transformed.
+2026-10-06T00:26:19Z [BUILD] rendering chunks...
+2026-10-06T00:26:19Z [BUILD] computing gzip size...
+2026-10-06T00:26:19Z [BUILD] dist/index.html                   0.70 kB │ gzip:  0.39 kB
+2026-10-06T00:26:19Z [BUILD] dist/assets/index-DsNbGkRX.css    8.37 kB │ gzip:  2.37 kB
+2026-10-06T00:26:19Z [BUILD] dist/assets/index-CVgGcMWw.js   157.06 kB │ gzip: 50.12 kB
+2026-10-06T00:26:19Z [BUILD] ✓ built in 8.42s
+2026-10-06T00:26:19Z [BUILD] [INFO] Build completed successfully.
+2026-10-06T00:26:19Z [BUILD] [INFO] Starting app with command: [npm start]
+2026-10-06T00:26:19Z [APP] 
+> manufacturing-operations-center@1.0.0 start
+> node server/index.js
+2026-10-06T00:26:19Z [APP] [Manufacturing Operations Center] listening on :8000 (env=production)
+2026-10-06T00:26:19Z [APP]   Dashboard: 01f13ffb2116152b9c57017ac6989369
+2026-10-06T00:26:19Z [APP]   Genie space: 01f1403396011f339af2cb207b69e9b6
+2026-10-06T00:26:19Z [APP]   Agent endpoint: mas-40863b57-endpoint
+2026-10-06T00:26:21Z [BUILD] [INFO] Deployment 01f1c11c7c7e1215a31a54705d1d9239 ended in 24.500443922s
+2026-10-06T00:26:21Z [BUILD] [INFO] Deployment successful
+2026-10-06T00:27:58Z [HTTP] <client-ip> - - [06/Oct/2026:00:27:57 +0000] "GET / HTTP/1.1" 302 471 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:02Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:01 +0000] "GET / HTTP/1.1" 200 696 "https://e2-demo-field-eng.cloud.databricks.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:02Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:01 +0000] "GET /assets/index-CVgGcMWw.js HTTP/1.1" 200 157075 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:02Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:01 +0000] "GET /assets/index-DsNbGkRX.css HTTP/1.1" 200 8372 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:03Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:02 +0000] "GET /api/config HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:03Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:02 +0000] "GET /favicon.ico HTTP/1.1" 200 696 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:56Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:55 +0000] "POST /api/genie/conversations HTTP/1.1" 200 807 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:56Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:56 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 415 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:58Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:57 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 407 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:28:59Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:28:59 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:01Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:00 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 999 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:02Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:01 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 999 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:03Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:03 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 1249 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:05Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:04 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 2134 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:06Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:06 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:08Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:07 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 918 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:09Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:09 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 1301 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:11Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:10 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 2152 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:12Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:11 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:13Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:13 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 1178 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:14 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 1350 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:15 +0000] "POST /api/genie/conversations HTTP/1.1" 200 807 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:16Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:15 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 415 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:16Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:16 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 2418 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:17Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:16 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 407 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:17Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:17 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:18 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:19Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:18 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 2300 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:20Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:19 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:20Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:20 +0000] "GET /api/genie/conversations/01f1c11cea7011f0a308c09648729924/messages/01f1c11cea821efaacc397fc3604e914 HTTP/1.1" 200 4849 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:21Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:21 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 880 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:23Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:22 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 880 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:24Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:23 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 1692 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:25Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:25 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:26 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 1064 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:28Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:28 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 1314 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:29Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:29 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 2091 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:31Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:30 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:32Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:32 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 1194 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:34Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:33 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 1485 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:35Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:34 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:36Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:36 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 2785 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:38Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:37 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:39Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:39 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 2667 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:29:41Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:40 +0000] "GET /api/genie/conversations/01f1c11cf5e01854a658b096906d451a/messages/01f1c11cf5ed1221b85cb228e50a1494 HTTP/1.1" 200 5216 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:30:51Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:29:46 +0000] "POST /api/agent/chat HTTP/1.1" 200 6872 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:33:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:33:27 +0000] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:33:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:33:27 +0000] "GET /assets/index-DsNbGkRX.css HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:33:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:33:27 +0000] "GET /assets/index-CVgGcMWw.js HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:33:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:33:27 +0000] "GET /api/config HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:33:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:33:27 +0000] "GET /favicon.ico HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:14 +0000] "POST /api/genie/conversations HTTP/1.1" 200 807 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:15 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 415 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:17Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:16 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 407 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:17 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:19Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:19 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:21Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:20 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:22Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:22 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 1241 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:24Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:23 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 1233 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:25Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:24 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 2754 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:26Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:26 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 3170 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:28Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:27 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:29Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:29 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 3052 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:31Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:30 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79 HTTP/1.1" 200 3052 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:38:31Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:00:38:30 +0000] "GET /api/genie/conversations/01f1c11e378f16b88c583301b233f9f4/messages/01f1c11e379e14b3bfaa788eb9331f79/attachments/01f1c11e3b631bb4980a1b566d3f42a1/query-result HTTP/1.1" 200 732 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T00:39:13Z [BUILD] [INFO] Starting deployment 01f1c11e578d1b1c877c84b4779ad7b0...
+2026-10-06T00:39:28Z [SYSTEM] [ERROR] App did not respect SIGTERM timeout of 15 seconds.
+2026-10-06T00:39:30Z [BUILD] [INFO] Downloading source code from /Workspace/Users/fa545c4a-29ec-475f-8c7f-fb1a799b7ad4/src/01f1c11e578d1b1c877c84b4779ad7b0
+2026-10-06T00:39:30Z [BUILD] [INFO] Updated file: python/source_code/package.json
+2026-10-06T00:39:30Z [BUILD] [INFO] Updated file: python/source_code/.gitignore
+2026-10-06T00:39:30Z [BUILD] [INFO] Updated file: python/source_code/app.yaml
+2026-10-06T00:39:30Z [BUILD] [INFO] Updated file: python/source_code/README.md
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/package.json
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/index.html
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/vite.config.ts
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/tsconfig.json
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/server/index.js
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/src/styles.css
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/src/main.tsx
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/src/App.tsx
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/src/lib/api.ts
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/AgentView.tsx
+2026-10-06T00:39:31Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/DashboardView.tsx
+2026-10-06T00:39:32Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/Icons.tsx
+2026-10-06T00:39:32Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/GenieView.tsx
+2026-10-06T00:39:32Z [BUILD] [INFO] Installing dependencies...
+2026-10-06T00:39:32Z [BUILD] 
+up to date, audited 75 packages in 401ms
+2026-10-06T00:39:32Z [BUILD] 
+19 packages are looking for funding
+  run `npm fund` for details
+2026-10-06T00:39:32Z [BUILD] 
+found 0 vulnerabilities
+2026-10-06T00:39:32Z [BUILD] [INFO] Dependencies installed successfully.
+2026-10-06T00:39:32Z [BUILD] [INFO] Running build script cd client && npm install --no-audit --no-fund && npm run build
+2026-10-06T00:39:32Z [BUILD] 
+> manufacturing-operations-center@1.0.0 build
+> cd client && npm install --no-audit --no-fund && npm run build
+2026-10-06T00:39:36Z [BUILD] 
+added 67 packages in 4s
+2026-10-06T00:39:36Z [BUILD] 
+> manufacturing-operations-center-client@1.0.0 build
+> tsc -b && vite build
+2026-10-06T00:39:38Z [BUILD] vite v5.4.21 building for production...
+2026-10-06T00:39:38Z [BUILD] transforming...
+2026-10-06T00:39:47Z [BUILD] ✓ 36 modules transformed.
+2026-10-06T00:39:47Z [BUILD] rendering chunks...
+2026-10-06T00:39:47Z [BUILD] computing gzip size...
+2026-10-06T00:39:47Z [BUILD] dist/index.html                   0.70 kB │ gzip:  0.40 kB
+2026-10-06T00:39:47Z [BUILD] dist/assets/index-DsNbGkRX.css    8.37 kB │ gzip:  2.37 kB
+2026-10-06T00:39:47Z [BUILD] dist/assets/index-BP8dJGvH.js   157.34 kB │ gzip: 50.17 kB
+2026-10-06T00:39:47Z [BUILD] ✓ built in 8.37s
+2026-10-06T00:39:47Z [BUILD] [INFO] Build completed successfully.
+2026-10-06T00:39:47Z [BUILD] [INFO] Starting app with command: [npm start]
+2026-10-06T00:39:47Z [APP] 
+> manufacturing-operations-center@1.0.0 start
+> node server/index.js
+2026-10-06T00:39:47Z [APP] [Manufacturing Operations Center] listening on :8000 (env=production)
+2026-10-06T00:39:47Z [APP]   Dashboard: 01f13ffb2116152b9c57017ac6989369
+2026-10-06T00:39:47Z [APP]   Genie space: 01f1403396011f339af2cb207b69e9b6
+  Agent endpoint: mas-40863b57-endpoint
+2026-10-06T00:39:49Z [BUILD] [INFO] Deployment 01f1c11e578d1b1c877c84b4779ad7b0 ended in 35.437702756s
+2026-10-06T00:39:49Z [BUILD] [INFO] Deployment successful
+2026-10-06T01:02:16Z [BUILD] [INFO] Starting deployment 01f1c1218fe611a5b1d086d0b6dab2bc...
+2026-10-06T01:02:31Z [SYSTEM] [ERROR] App did not respect SIGTERM timeout of 15 seconds.
+2026-10-06T01:02:32Z [BUILD] [INFO] Downloading source code from /Workspace/Users/fa545c4a-29ec-475f-8c7f-fb1a799b7ad4/src/01f1c1218fe611a5b1d086d0b6dab2bc
+2026-10-06T01:02:33Z [BUILD] [INFO] Updated file: python/source_code/package.json
+2026-10-06T01:02:33Z [BUILD] [INFO] Updated file: python/source_code/.gitignore
+2026-10-06T01:02:33Z [BUILD] [INFO] Updated file: python/source_code/app.yaml
+2026-10-06T01:02:33Z [BUILD] [INFO] Updated file: python/source_code/README.md
+2026-10-06T01:02:33Z [BUILD] [INFO] Updated file: python/source_code/client/package.json
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/index.html
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/vite.config.ts
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/tsconfig.json
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/server/index.js
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/server/ops.js
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/server/lakebase.js
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/src/styles.css
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/src/main.tsx
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/src/App.tsx
+2026-10-06T01:02:34Z [BUILD] [INFO] Updated file: python/source_code/client/src/lib/api.ts
+2026-10-06T01:02:35Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/AgentView.tsx
+2026-10-06T01:02:35Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/DashboardView.tsx
+2026-10-06T01:02:35Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/Icons.tsx
+2026-10-06T01:02:35Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/GenieView.tsx
+2026-10-06T01:02:35Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/OpsView.tsx
+2026-10-06T01:02:35Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/PipelineView.tsx
+2026-10-06T01:02:35Z [BUILD] [INFO] Installing dependencies...
+2026-10-06T01:02:36Z [BUILD] 
+added 14 packages, and audited 89 packages in 765ms
+2026-10-06T01:02:36Z [BUILD] 
+19 packages are looking for funding
+  run `npm fund` for details
+2026-10-06T01:02:36Z [BUILD] 
+found 0 vulnerabilities
+2026-10-06T01:02:36Z [BUILD] [INFO] Dependencies installed successfully.
+2026-10-06T01:02:36Z [BUILD] [INFO] Running build script cd client && npm install --no-audit --no-fund && npm run build
+2026-10-06T01:02:36Z [BUILD] 
+> manufacturing-operations-center@1.0.0 build
+> cd client && npm install --no-audit --no-fund && npm run build
+2026-10-06T01:02:40Z [BUILD] 
+added 67 packages in 4s
+2026-10-06T01:02:40Z [BUILD] 
+> manufacturing-operations-center-client@1.0.0 build
+> tsc -b && vite build
+2026-10-06T01:02:42Z [BUILD] vite v5.4.21 building for production...
+2026-10-06T01:02:43Z [BUILD] transforming...
+2026-10-06T01:02:51Z [BUILD] ✓ 38 modules transformed.
+2026-10-06T01:02:51Z [BUILD] rendering chunks...
+2026-10-06T01:02:51Z [BUILD] computing gzip size...
+2026-10-06T01:02:51Z [BUILD] dist/index.html                   0.70 kB │ gzip:  0.39 kB
+2026-10-06T01:02:51Z [BUILD] dist/assets/index-Dy3iPdBt.css   13.26 kB │ gzip:  3.40 kB
+2026-10-06T01:02:51Z [BUILD] dist/assets/index-B9erHEWu.js   169.31 kB │ gzip: 53.41 kB
+2026-10-06T01:02:51Z [BUILD] ✓ built in 8.36s
+2026-10-06T01:02:51Z [BUILD] [INFO] Build completed successfully.
+2026-10-06T01:02:51Z [BUILD] [INFO] Starting app with command: [npm start]
+2026-10-06T01:02:51Z [APP] 
+> manufacturing-operations-center@1.0.0 start
+> node server/index.js
+2026-10-06T01:02:51Z [APP] [Manufacturing Operations Center] listening on :8000 (env=production)
+2026-10-06T01:02:51Z [APP]   Dashboard: 01f13ffb2116152b9c57017ac6989369
+2026-10-06T01:02:51Z [APP]   Genie space: 01f1403396011f339af2cb207b69e9b6
+  Agent endpoint: mas-40863b57-endpoint
+2026-10-06T01:02:53Z [BUILD] [INFO] Deployment 01f1c1218fe611a5b1d086d0b6dab2bc ended in 36.700206824s
+2026-10-06T01:02:53Z [BUILD] [INFO] Deployment successful
+2026-10-06T18:29:17Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET / HTTP/1.1" 200 696 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:17Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:17Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:17Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /assets/index-B9erHEWu.js HTTP/1.1" 200 169340 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /assets/index-Dy3iPdBt.css HTTP/1.1" 200 13255 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /api/config HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /favicon.ico HTTP/1.1" 200 696 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:18Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:17 +0000] "GET /api/pipeline/status HTTP/1.1" 200 3497 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:40Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:40Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:40Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:40Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:40 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:40Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:40 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:40Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:40 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:42Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:42Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:42Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:42Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:42 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:42Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:42 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:42Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:42 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:44Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:44Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:44Z [APP] [ops error] 503 Lakebase is not attached to this app
+2026-10-06T18:29:44Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:44 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:44Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:44 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:29:44Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:29:44 +0000] "GET /api/ops/wafers HTTP/1.1" 503 48 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:26 +0000] "POST /api/genie/conversations HTTP/1.1" 200 807 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:27 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 415 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:29Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:28 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 407 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:30Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:30 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:32Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:31 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:33Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:32 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:34Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:34 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:36Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:35 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 1187 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:37Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:37 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 1484 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:39Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:38 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:40Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:39 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 1484 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:41Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:41 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 2686 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:43Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:42 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:44Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:44 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:46Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:45 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:47Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:47 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 1132 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:49Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:48 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:50Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:49 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 2417 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:51Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:51 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:53Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:52 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 2415 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:55Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:55 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 2791 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:57Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:57 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:30:59Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:59 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 2673 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:31:01Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:31:01 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a HTTP/1.1" 200 2673 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:31:02Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:31:01 +0000] "GET /api/genie/conversations/01f1c1b4006718afabb5bb2e622a8281/messages/01f1c1b400821627aa1c889fbfb4355a/attachments/01f1c1b40ba51871bfe5aa6b517a8d51/query-result HTTP/1.1" 200 518 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:31:27Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:30:33 +0000] "POST /api/agent/chat HTTP/1.1" 200 6913 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:34:30Z [BUILD] [INFO] Starting deployment 01f1c1b48d351980989aa432cf186c56...
+2026-10-06T18:34:45Z [SYSTEM] [ERROR] App did not respect SIGTERM timeout of 15 seconds.
+2026-10-06T18:34:46Z [BUILD] [INFO] Downloading source code from /Workspace/Users/fa545c4a-29ec-475f-8c7f-fb1a799b7ad4/src/01f1c1b48d351980989aa432cf186c56
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/package.json
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/.gitignore
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/app.yaml
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/README.md
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/client/package.json
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/client/index.html
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/client/vite.config.ts
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/client/tsconfig.json
+2026-10-06T18:34:47Z [BUILD] [INFO] Updated file: python/source_code/server/index.js
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/server/ops.js
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/server/lakebase.js
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/client/src/styles.css
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/client/src/main.tsx
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/client/src/App.tsx
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/client/src/lib/api.ts
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/AgentView.tsx
+2026-10-06T18:34:48Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/DashboardView.tsx
+2026-10-06T18:34:49Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/Icons.tsx
+2026-10-06T18:34:49Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/GenieView.tsx
+2026-10-06T18:34:49Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/OpsView.tsx
+2026-10-06T18:34:49Z [BUILD] [INFO] Updated file: python/source_code/client/src/components/PipelineView.tsx
+2026-10-06T18:34:49Z [BUILD] [INFO] Installing dependencies...
+2026-10-06T18:34:49Z [BUILD] 
+up to date, audited 89 packages in 446ms
+2026-10-06T18:34:49Z [BUILD] 
+2026-10-06T18:34:49Z [BUILD] 19 packages are looking for funding
+2026-10-06T18:34:49Z [BUILD]   run `npm fund` for details
+2026-10-06T18:34:49Z [BUILD] 
+found 0 vulnerabilities
+2026-10-06T18:34:49Z [BUILD] [INFO] Dependencies installed successfully.
+2026-10-06T18:34:49Z [BUILD] [INFO] Running build script cd client && npm install --no-audit --no-fund && npm run build
+2026-10-06T18:34:49Z [BUILD] 
+> manufacturing-operations-center@1.0.0 build
+> cd client && npm install --no-audit --no-fund && npm run build
+2026-10-06T18:34:56Z [BUILD] 
+added 67 packages in 6s
+2026-10-06T18:34:56Z [BUILD] 
+> manufacturing-operations-center-client@1.0.0 build
+> tsc -b && vite build
+2026-10-06T18:34:58Z [BUILD] vite v5.4.21 building for production...
+2026-10-06T18:34:58Z [BUILD] transforming...
+2026-10-06T18:35:06Z [BUILD] ✓ 38 modules transformed.
+2026-10-06T18:35:06Z [BUILD] rendering chunks...
+2026-10-06T18:35:06Z [BUILD] computing gzip size...
+2026-10-06T18:35:06Z [BUILD] dist/index.html                   0.70 kB │ gzip:  0.39 kB
+dist/assets/index-Dy3iPdBt.css   13.26 kB │ gzip:  3.40 kB
+dist/assets/index-B9erHEWu.js   169.31 kB │ gzip: 53.41 kB
+2026-10-06T18:35:06Z [BUILD] ✓ built in 8.39s
+2026-10-06T18:35:06Z [BUILD] [INFO] Build completed successfully.
+2026-10-06T18:35:06Z [BUILD] [INFO] Starting app with command: [npm start]
+2026-10-06T18:35:07Z [APP] 
+> manufacturing-operations-center@1.0.0 start
+> node server/index.js
+2026-10-06T18:35:07Z [APP] [lakebase] endpoint projects/parijat-mfg-ops/branches/production/endpoints/primary host ep-soft-night-d1x39s7b.database.us-west-2.cloud.databricks.com db databricks_postgres
+2026-10-06T18:35:07Z [APP] [Manufacturing Operations Center] listening on :8000 (env=production)
+2026-10-06T18:35:07Z [APP]   Dashboard: 01f13ffb2116152b9c57017ac6989369
+2026-10-06T18:35:07Z [APP]   Genie space: 01f1403396011f339af2cb207b69e9b6
+2026-10-06T18:35:07Z [APP]   Agent endpoint: mas-40863b57-endpoint
+2026-10-06T18:35:08Z [BUILD] [INFO] Deployment 01f1c1b48d351980989aa432cf186c56 ended in 38.682435623s
+2026-10-06T18:35:08Z [BUILD] [INFO] Deployment successful
+2026-10-06T18:37:23Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:37:21 +0000] "GET /api/ops/wafers HTTP/1.1" 200 17764 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:37:23Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:37:23 +0000] "GET /api/ops/wafers/MX5-F12-A009-W06 HTTP/1.1" 200 19224 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:37:33Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:37:32 +0000] "GET /api/ops/wafers/MX7-F12-A012-W16 HTTP/1.1" 200 22993 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:04Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:04 +0000] "GET /api/ops/wafers/MX7-F12-W29-W01 HTTP/1.1" 200 23037 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:15 +0000] "POST /api/ops/wafers/MX7-F12-W29-W01/disposition HTTP/1.1" 200 126 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:15 +0000] "GET /api/ops/wafers HTTP/1.1" 200 17814 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:15Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:15 +0000] "GET /api/ops/wafers/MX7-F12-W29-W01 HTTP/1.1" 200 23162 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:26Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:26 +0000] "GET /api/ops/wafers HTTP/1.1" 200 17814 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:37Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:36 +0000] "GET /api/ops/wafers HTTP/1.1" 200 17402 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:39Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:38 +0000] "GET /api/ops/wafers HTTP/1.1" 200 17814 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:41Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:41 +0000] "GET /api/ops/wafers HTTP/1.1" 200 3656 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:44Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:43 +0000] "GET /api/ops/wafers HTTP/1.1" 200 755 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
+2026-10-06T18:38:46Z [HTTP] <client-ip> - 4763802372748028@1444828305810485 [06/Oct/2026:18:38:46 +0000] "GET /api/ops/wafers HTTP/1.1" 304 0 "https://mfg-ops-center-1444828305810485.aws.databricksapps.com/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/<client-ip> Safari/537.36"
