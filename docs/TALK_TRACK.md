@@ -219,5 +219,5 @@ Optional follow-ups:
 | Classifier agreement | 97.1% of 521 reviewed wafers, cross-validated (rules baseline 93.1%) |
 | Anomaly detector | ROC AUC 0.988; 379 of 1,200 wafers flagged |
 | Onset / recovery | 2025-08-18 07:30 / 2025-08-24 22:15 |
-| Lakebase reads (serverless) | queue ~5 ms, one wafer's 529-die map ~9 ms |
+| Lakebase reads (serverless, measured) | queue ~17 ms, one wafer's 529-die map ~18 ms |
 | Lakeflow ingest | 565,856 PRR + 487,320 PTR rows, 0 dropped by expectations |

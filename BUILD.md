@@ -137,3 +137,56 @@ App (Agent tab) --OBO--> mas-40863b57-endpoint (Multi-Agent Supervisor)
 - **App resource ≠ app permission.** Binding a resource, declaring the OAuth scope and getting the user's consent are three separate steps. A stale consent grant gives a 403, with no new consent prompt.
 - **Bundles with Agent Bricks or Genie need a bootstrap plan.** On a fresh workspace, Genie, the metric views and the KA have to be created in a set order.
 - **Test the real runtime.** The psycopg crash and the missing `LAKEBASE_ENDPOINT` only showed up on serverless and in the deployed app, not in local checks.
+
+---
+
+## Conversation log: 2026-10-07 session (Claude Code, Opus 5.5)
+
+This is the full back-and-forth with Claude Code for the session that wrote this file and replaced the rules with ML. My requests are quoted as I typed them. Each one is followed by what Claude Code did and what came out of it.
+
+### 1. Write the build narrative
+> "Can you create a add a build narrative or BUILD.md that documents the actual development workflow: which AI tools helped scaffold the Lakeflow pipeline, the Lakebase client, or the Supervisor Agent wiring, and what you iterated on or changed your mind about along the way"
+
+- Claude Code read the repo's git history, `docs/DESIGN.md`, the project memory and the earlier Claude Code transcripts (2026-09-29 to 10-07), including the compaction summary of the main build session.
+- It wrote this file: tools used, timeline, the plan-vs-actual table, the Supervisor wiring and lessons. It also linked BUILD.md from the README.
+- It removed reasons it had inferred but couldn't find in the record, and left a TODO for how the original app shell was scaffolded, because no record from May 2026 exists.
+- It flagged two gaps: the planned UC row filters and column masks were never built, and the richer tab-state fix was never committed.
+
+### 2. Replace the rules with an anomaly-detection model
+> "Can we build a anomaly-detection model instead of rule based based on the dataset ."
+
+- Claude Code loaded the `databricks-core` and `databricks-ml-training` skills. It checked what `pattern_class` feeds: the dashboard, the Genie metric view, the Lakebase queue, the app's wafer map and the KA docs.
+- It pointed out that an anomaly model can say *whether* a map is unusual but not *which* pattern it is, and asked me to choose a scope:
+  - anomaly detector plus ML classifier (recommended);
+  - anomaly detector only;
+  - equipment-drift anomaly detection.
+- **My answer:** "Anomaly + ML classifier (Recommended)".
+- It looked at the labels: 521 reviewed wafers (346 None, 8 to 40 for each pattern, only 8 Scratch, no Near-full), with rules agreeing on 485/521 (93.1%).
+- On a new branch `wafer-ml`, it split `transformations.sql` (ending at `silver_wafer_features`), added `wafer_ml.py` and `wafer_patterns.sql`, and wired two new job tasks.
+- It changed the app: the queue now includes anomalous wafers, and the wafer detail shows confidence, anomaly score and the rules baseline. The app type-checked and built.
+- **Run 1 failed:** `TypeError: Decimal / float`, because Spark's `AVG(0.0 …)` returns DECIMAL. Fixed with `DOUBLE` casts.
+- **Run 2:** random forest at 96.2% CV accuracy, but Scratch was 2/8 against the rules' 7/8. Claude Code wouldn't ship a model that regressed on a class.
+- **Run 3:** added largest-connected-blob shape features. Results: **97.1%** CV accuracy (macro F1 0.938 vs 0.832), Loc 14/21 (rules 9/21), Scratch 7/8, Edge-Loc 32/34 (one fewer than the rules). The Isolation Forest reached ROC AUC 0.988 (precision 92.7%, recall 93.7%, 379 of 1,200 flagged).
+- It checked the incident story: 30 Edge-Ring wafers on TST-AUS-03..05, all on PC-AUS-447, matching the 30 engineer labels (rules: 28).
+- It ran the full job (run 295473572818052): all 8 tasks succeeded, and the Lakebase synced table picked up the new columns with no changes.
+- **App outage:** a `package-lock.json` from Claude Code's local `npm install` was synced to the app source. It pinned the internal npm proxy, so the Apps build failed with 403s and the app went UNAVAILABLE for about two minutes. Claude Code deleted the file locally and in the workspace, then redeployed. The app came back RUNNING.
+- It updated the KA corpus text, the Genie instructions, the dashboard subtitle, the pipeline-tab step labels, DESIGN.md, TALK_TRACK.md, README and BUILD.md, then committed on `wafer-ml` (`d63f1b3`).
+- Two scheduled check-ins fired after the work was done. Claude Code reported that nothing was outstanding.
+
+### 3. Verify, regenerate evidence, push, update docs and slides
+> "I checked and saw all the anomaly detected patterns on the Wafer Operations tab. Regenerate evidance folder, push wafer-m to main and update the talk track adn slides and design document as well"
+
+- **Evidence:**
+  - Updated the verification notebook. §5 now shows the @prod model versions, classifier vs rules metrics, per-class recall, anomaly metrics and anomalous wafers with no known pattern. §8 runs the app's new queue query. `mlflow` was added to its dependencies.
+  - Ran `collect_evidence.py` against run 295473572818052. The notebook run succeeded and replaced the old 6-task run export.
+  - The evidence README now shows 28 managed tables, 2 registered models and the model metrics.
+- **Git:** committed the evidence, fast-forwarded `main` to `a815523`, pushed to GitHub and deleted the merged local branch.
+- **Google Docs:** rewrote the design document and talk track in place (same IDs) from the repo markdown. The diagram was swapped for a stage table that includes the ML steps.
+- **Deck:** made targeted text replacements on six slides (value, root cause, wafer-map ML, Wafer Operations desk, one source of truth, pilot). Validation found 0 errors, and the two densest slides were checked visually.
+- **Flagged:** the deck and design doc quoted Lakebase reads of ~5 ms / ~9 ms, but the evidence notebook measured ~17 ms / ~18 ms.
+
+### 4. Use the measured numbers, and log this conversation
+> "yes switch deck and doc to measured numbers. Also store all of this in the md file as the conversation ninteraction"
+
+- Changed the Lakebase latency to the measured **~17 ms queue / ~18 ms die map** in DESIGN.md, TALK_TRACK.md, both Google Docs and the Wafer Operations slide. A scan of all three Google files confirmed no old figures remain.
+- Added this conversation log to BUILD.md.

@@ -319,7 +319,7 @@ The analytical layer answers "what happened"; the Wafer Operations desk is where
 | `mfg_ops.lb_wafer_map_dies` | Synced from `gold_wafer_map_dies` (PK `wafer_id, die_x, die_y`) | Die-level map for any wafer |
 | `wafer_ops.wafer_dispositions` | Created and owned by the app's service principal | Write-back: Hold / Re-probe / Release / Scrap, note, user and timestamp |
 
-Measured from serverless compute: queue query about 5 ms, one wafer's 529-die map about 9 ms. The app shows the query time on each load.
+Measured from serverless compute in the evidence notebook (job run 295473572818052): the queue query (300 rows) takes about 17 ms and one wafer's 529-die map about 18 ms. The app shows the query time on each load.
 
 **Connection:** the app gets `PGHOST`, `PGDATABASE`, `PGUSER` and `LAKEBASE_ENDPOINT` from its `lakebase` resource. It generates a short-lived database credential for its service principal (`POST /api/2.0/postgres/credentials`) and the `pg` pool fetches a fresh one per connection. It retries once while a scaled-to-zero compute wakes.
 
