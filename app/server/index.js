@@ -6,6 +6,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getWorkspaceHost, sendError } from './common.js';
 import { registerOpsRoutes } from './ops.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -16,16 +17,9 @@ const DASHBOARD_ID = process.env.DASHBOARD_ID || '01f13ffb2116152b9c57017ac69893
 const GENIE_SPACE_ID = process.env.GENIE_SPACE_ID || '01f1403396011f339af2cb207b69e9b6';
 const AGENT_SERVING_ENDPOINT = process.env.AGENT_SERVING_ENDPOINT || 'mas-40863b57-endpoint';
 const SUPERVISOR_AGENT_TILE_ID = process.env.SUPERVISOR_AGENT_TILE_ID || '40863b57-1699-430c-8335-ee6db4a0c691';
-const KNOWLEDGE_ASSISTANT_TILE_ID = process.env.KNOWLEDGE_ASSISTANT_TILE_ID || '5578ac04-9888-47c0-8b14-ba483a0e0259';
-const KNOWLEDGE_ASSISTANT_ENDPOINT = process.env.KNOWLEDGE_ASSISTANT_ENDPOINT || 'ka-5578ac04-endpoint';
+const KNOWLEDGE_ASSISTANT_TILE_ID = process.env.KNOWLEDGE_ASSISTANT_TILE_ID || 'b49c04e7-8a4b-4c5e-b7a9-6422165f5516';
+const KNOWLEDGE_ASSISTANT_ENDPOINT = process.env.KNOWLEDGE_ASSISTANT_ENDPOINT || 'ka-b49c04e7-endpoint';
 const WORKSPACE_ORG_ID = process.env.WORKSPACE_ORG_ID || '1444828305810485';
-
-// In Databricks Apps, DATABRICKS_HOST is hostname only (no scheme).
-function getWorkspaceHost() {
-  let host = process.env.DATABRICKS_HOST || 'e2-demo-field-eng.cloud.databricks.com';
-  if (!host.startsWith('http')) host = `https://${host}`;
-  return host;
-}
 
 // Pull the user's OBO token from the Databricks Apps proxy header.
 // Locally (dev) we fall back to DATABRICKS_TOKEN if present.
@@ -108,13 +102,6 @@ async function databricksFetch(req, pathSuffix, init = {}) {
   return body;
 }
 
-function sendError(res, err) {
-  console.error('[error]', err.status || 500, err.message, err.body || '');
-  res.status(err.status || 500).json({
-    error: err.message,
-    detail: err.body || null,
-  });
-}
 
 // ---------- Genie ----------
 // Start a new conversation with the first user message.

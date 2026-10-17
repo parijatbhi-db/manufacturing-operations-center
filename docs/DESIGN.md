@@ -356,7 +356,7 @@ The dashboard is deployed and published by the bundle on warehouse `parijat-mfg-
 - **Data sources:** the seven metric views.
 - **Instructions:** sites, products, incident facts, formatting rules, wafer-pattern semantics, and a reminder to use `MEASURE()` with metric views.
 - **Examples:** 10 example SQLs, all verified to execute, and 8 sample questions.
-- **Source:** the definition lives in `bundle/src/stdf_genie.geniespace.json`.
+- **Source:** the definition lives inline (`serialized_space`) in `bundle/resources/stdf_genie.genie_space.yml`, with table names built from `${var.catalog}.${var.schema}`.
 
 ### Knowledge Assistant (`STDF-Test-Quality-KA`)
 

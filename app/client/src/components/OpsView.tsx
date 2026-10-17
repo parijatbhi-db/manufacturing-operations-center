@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { OpsWafer, OpsWaferDetail, opsGetWafer, opsListWafers, opsSetDisposition } from '../lib/api';
 import { IconRefresh } from './Icons';
 
@@ -56,47 +56,63 @@ export default function OpsView() {
   const [detail, setDetail] = useState<OpsWaferDetail | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Queue and detail fail independently, so each keeps its own error
+  const [listError, setListError] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  // Latest request per panel; responses from superseded requests are dropped
+  const listReq = useRef(0);
+  const detailReq = useRef(0);
 
   async function loadList() {
-    setError(null);
+    const req = ++listReq.current;
     try {
       const r = await opsListWafers({ pattern, site, status });
+      if (req !== listReq.current) return;
       setWafers(r.wafers);
       setListLatency(r.latencyMs);
+      setListError(null);
       if (!selected && r.wafers.length) setSelected(r.wafers[0].wafer_id);
     } catch (e: any) {
-      setError(e.message);
+      if (req === listReq.current) setListError(e.message);
     }
   }
 
   async function loadDetail(id: string) {
+    const req = ++detailReq.current;
     try {
-      setDetail(await opsGetWafer(id));
+      const d = await opsGetWafer(id);
+      if (req !== detailReq.current) return;
+      setDetail(d);
+      setDetailError(null);
     } catch (e: any) {
-      setError(e.message);
+      if (req === detailReq.current) setDetailError(e.message);
     }
   }
 
   useEffect(() => { loadList(); }, [pattern, site, status]);
   useEffect(() => { if (selected) loadDetail(selected); }, [selected]);
 
+  const w = detail?.wafer;
+  // The panel can briefly show the previous wafer while the selected one loads
+  const detailCurrent = !!w && w.wafer_id === selected;
+
   async function disposition(key: string) {
-    if (!selected) return;
+    // Act on the wafer whose evidence is on screen, never a selection that hasn't loaded yet
+    if (!w || !detailCurrent) return;
+    const id = w.wafer_id;
     setBusy(true);
-    setError(null);
+    setDetailError(null);
     try {
-      await opsSetDisposition(selected, key, note);
+      await opsSetDisposition(id, key, note);
       setNote('');
-      await Promise.all([loadDetail(selected), loadList()]);
+      await Promise.all([loadDetail(id), loadList()]);
     } catch (e: any) {
-      setError(e.message);
+      setDetailError(e.message);
     } finally {
       setBusy(false);
     }
   }
 
-  const w = detail?.wafer;
   const binCounts = useMemo(() => {
     const c: Record<string, number> = {};
     detail?.dies.forEach((d) => { if (d.bin_label !== 'Pass') c[d.bin_label] = (c[d.bin_label] || 0) + 1; });
@@ -152,13 +168,14 @@ export default function OpsView() {
                 {x.disposition && <div className={`disp-tag d-${x.disposition}`}>{x.disposition}</div>}
               </button>
             ))}
-            {!wafers.length && !error && <div className="ops-empty">No wafers match these filters.</div>}
+            {listError && <div className="ops-error">{listError}</div>}
+            {!wafers.length && !listError && <div className="ops-empty">No wafers match these filters.</div>}
           </div>
         </section>
 
         <section className="ops-detail">
-          {error && <div className="ops-error">{error}</div>}
-          {!w && !error && <div className="ops-empty">Select a wafer from the queue.</div>}
+          {detailError && <div className="ops-error">{detailError}</div>}
+          {!w && !detailError && <div className="ops-empty">Select a wafer from the queue.</div>}
           {w && detail && (
             <>
               <div className="ops-detail-head">
@@ -200,7 +217,7 @@ export default function OpsView() {
                     />
                     <div className="disp-buttons">
                       {DISPOSITIONS.map((d) => (
-                        <button key={d.key} className={`btn disp-btn d-${d.key}`} disabled={busy} title={d.hint} onClick={() => disposition(d.key)}>
+                        <button key={d.key} className={`btn disp-btn d-${d.key}`} disabled={busy || !detailCurrent} title={d.hint} onClick={() => disposition(d.key)}>
                           {d.label}
                         </button>
                       ))}

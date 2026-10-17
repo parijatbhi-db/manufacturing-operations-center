@@ -23,9 +23,12 @@ function duration(start: number, end: number | null) {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
+// Anything not in a terminal state (incl. TERMINATING, WAITING on a retry) is still in progress.
+const TERMINAL_STATES = ['TERMINATED', 'SKIPPED', 'INTERNAL_ERROR'];
+
 function stateClass(state: string, result: string | null) {
   if (result === 'SUCCESS') return 'ok';
-  if (state === 'RUNNING' || state === 'PENDING' || state === 'QUEUED' || state === 'BLOCKED') return 'running';
+  if (state && !TERMINAL_STATES.includes(state)) return 'running';
   if (result) return 'bad';
   return '';
 }
@@ -34,6 +37,8 @@ export default function PipelineView() {
   const [status, setStatus] = useState<PipelineStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  // Run started from this tab that runs/list hasn't returned yet
+  const [pendingRunId, setPendingRunId] = useState<number | null>(null);
   const timer = useRef<number | null>(null);
 
   async function load() {
@@ -45,21 +50,27 @@ export default function PipelineView() {
     }
   }
 
-  const running = !!status?.runs.some((r) => stateClass(r.state, r.result) === 'running');
+  const pendingListed = pendingRunId != null && !!status?.runs.some((r) => r.runId === pendingRunId);
+  useEffect(() => { if (pendingListed) setPendingRunId(null); }, [pendingListed]);
+
+  const running = pendingRunId != null || !!status?.runs.some((r) => stateClass(r.state, r.result) === 'running');
 
   useEffect(() => { load(); }, []);
-  // Poll while a run is active
+  // Poll while a run is active or a just-started run hasn't been listed yet
   useEffect(() => {
     if (timer.current) window.clearInterval(timer.current);
-    if (running) timer.current = window.setInterval(load, 15000);
+    if (running) timer.current = window.setInterval(load, pendingRunId != null ? 3000 : 15000);
     return () => { if (timer.current) window.clearInterval(timer.current); };
-  }, [running]);
+  }, [running, pendingRunId]);
 
   async function refresh() {
     setStarting(true);
     setError(null);
     try {
-      await pipelineRun();
+      const { runId } = await pipelineRun();
+      setPendingRunId(runId);
+      // Safety valve so a run that never shows up in runs/list can't keep the tab polling forever
+      window.setTimeout(() => setPendingRunId((id) => (id === runId ? null : id)), 120_000);
       await load();
     } catch (e: any) {
       setError(e.message);

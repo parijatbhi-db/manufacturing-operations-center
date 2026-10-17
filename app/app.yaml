@@ -26,34 +26,7 @@ env:
   - name: 'WORKSPACE_ORG_ID'
     value: '1444828305810485'
 
-# Resources declared so the deploy flow prompts for OBO consent.
-# These keys must be wired in the Databricks UI when adding resources to the app.
-#
-# Resource: Dashboard (Lakeview)
-#   key: dashboard
-#   id: 01f13ffb2116152b9c57017ac6989369
-#   permission: CAN_READ
-#
-# Resource: Genie Space
-#   key: genie-space
-#   id: 01f1403396011f339af2cb207b69e9b6
-#   permission: CAN_RUN
-#
-# Resource: Lakebase (postgres) — injects PGHOST/PGDATABASE/PGUSER/LAKEBASE_ENDPOINT
-#   key: lakebase
-#   branch: projects/parijat-mfg-ops/branches/production
-#   permission: CAN_CONNECT_AND_CREATE
-#
-# Resource: Job (data refresh)
-#   key: refresh-job
-#   id: 848871296768056
-#   permission: CAN_MANAGE_RUN
-#
-# Resource: Model Serving Endpoint (supervisor agent)
-#   key: serving-endpoint
-#   name: mas-40863b57-endpoint
-#   permission: CAN_QUERY
-#
-# User authorization scopes required (set in app definition or UI):
-#   - dashboards.genie
-#   - serving.serving-endpoints
+# Resources (genie-space, serving-endpoint, refresh-job, lakebase) and user_api_scopes are
+# declared on the app in the bundle: bundle/resources/app.yml. The genie-space binding follows
+# the bundle's own Genie space, the same one the supervisor agent uses.
+# Dashboard has no app-resource type: DASHBOARD_ID above, viewers need CAN_READ on it directly.

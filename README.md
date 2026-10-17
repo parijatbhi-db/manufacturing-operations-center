@@ -61,7 +61,7 @@ The bundle owns `parijat_demos.mfg_ops` end to end — it is the single source o
 
 The job has no schedule; run it from the app's **Data Pipeline** tab (Refresh data) or the Jobs UI.
 
-The bundle also deploys the schema, volume, SQL warehouse (`parijat-mfg-ops`), Lakeflow pipeline, Lakebase project + synced tables, Lakeview dashboard (incl. the **Wafer Map Patterns** page) and the Genie space (`src/stdf_genie.geniespace.json`). It uses the direct deployment engine.
+The bundle also deploys the schema, volume, SQL warehouse (`parijat-mfg-ops`), Lakeflow pipeline, Lakebase project + synced tables, Lakeview dashboard (incl. the **Wafer Map Patterns** page) and the Genie space (inline `serialized_space` in `resources/stdf_genie.genie_space.yml`, so its tables follow the `catalog`/`schema` variables). It uses the direct deployment engine.
 
 **Fresh workspace bootstrap:** the Genie space can't be created until the metric views exist, so on the very first deploy replace `${resources.genie_spaces.stdf_genie.id}` in `databricks.yml` with a placeholder, comment out `include: resources/*.yml`, deploy + run the job, then restore both and deploy again.
 

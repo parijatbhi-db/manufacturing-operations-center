@@ -4,20 +4,26 @@
 // credential generated for the app's service principal.
 
 import pg from 'pg';
+import { getWorkspaceHost as workspaceHost } from './common.js';
 
 const TOKEN_REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
-function workspaceHost() {
-  let host = process.env.DATABRICKS_HOST || '';
-  if (host && !host.startsWith('http')) host = `https://${host}`;
-  return host;
+// Cache a token and share one in-flight request between concurrent callers, so a burst of new
+// pool connections (e.g. the 3 parallel wafer-detail queries on a cold start) fetches it once.
+function cachedToken(fetchToken) {
+  let cached = null;
+  let inFlight = null;
+  return async () => {
+    if (cached && cached.expiresAt - Date.now() > TOKEN_REFRESH_MARGIN_MS) return cached.value;
+    inFlight ||= fetchToken()
+      .then((t) => { cached = t; return t.value; })
+      .finally(() => { inFlight = null; });
+    return inFlight;
+  };
 }
 
 // ---- Service principal OAuth (client credentials) ----
-let spToken = null;
-
-export async function getServicePrincipalToken() {
-  if (spToken && spToken.expiresAt - Date.now() > TOKEN_REFRESH_MARGIN_MS) return spToken.value;
+export const getServicePrincipalToken = cachedToken(async () => {
   const clientId = process.env.DATABRICKS_CLIENT_ID;
   const clientSecret = process.env.DATABRICKS_CLIENT_SECRET;
   if (!clientId || !clientSecret) throw new Error('App service principal credentials are not available');
@@ -31,15 +37,11 @@ export async function getServicePrincipalToken() {
   });
   if (!resp.ok) throw new Error(`SP token request failed: ${resp.status} ${await resp.text()}`);
   const body = await resp.json();
-  spToken = { value: body.access_token, expiresAt: Date.now() + body.expires_in * 1000 };
-  return spToken.value;
-}
+  return { value: body.access_token, expiresAt: Date.now() + body.expires_in * 1000 };
+});
 
 // ---- Lakebase database credential ----
-let dbCredential = null;
-
-async function getDatabaseCredential() {
-  if (dbCredential && dbCredential.expiresAt - Date.now() > TOKEN_REFRESH_MARGIN_MS) return dbCredential.value;
+const getDatabaseCredential = cachedToken(async () => {
   const resp = await fetch(`${workspaceHost()}/api/2.0/postgres/credentials`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${await getServicePrincipalToken()}`, 'Content-Type': 'application/json' },
@@ -48,9 +50,8 @@ async function getDatabaseCredential() {
   if (!resp.ok) throw new Error(`Lakebase credential request failed: ${resp.status} ${await resp.text()}`);
   const body = await resp.json();
   const expiresAt = body.expire_time ? Date.parse(body.expire_time) : Date.now() + 55 * 60 * 1000;
-  dbCredential = { value: body.token, expiresAt };
-  return dbCredential.value;
-}
+  return { value: body.token, expiresAt };
+});
 
 const REQUIRED_ENV = ['PGHOST', 'PGDATABASE', 'PGUSER', 'LAKEBASE_ENDPOINT'];
 
@@ -74,7 +75,9 @@ export function getPool() {
       user: process.env.PGUSER,
       // pg calls this for every new connection, so tokens rotate without restarting the app
       password: () => getDatabaseCredential(),
-      ssl: { rejectUnauthorized: false },
+      // Verify the server certificate (Lakebase hosts use publicly trusted certs); the password
+      // sent over this connection is a live OAuth credential.
+      ssl: { rejectUnauthorized: true },
       max: 5,
       idleTimeoutMillis: 30000,
     });
