@@ -31,8 +31,9 @@ variables:
     description: Serving endpoint of the Agent Bricks supervisor the app chats with
     default: mas-40863b57-endpoint
   workspace_path:
+    # /Workspace-prefixed: Apps reject the bare /Users/... form for the app source path
     description: Workspace path where bundle files will be synced
-    default: /Users/parijat.bhide@databricks.com/semi_stdf
+    default: /Workspace/Users/parijat.bhide@databricks.com/semi_stdf
 workspace:
   file_path: ${var.workspace_path}
 sync:
