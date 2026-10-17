@@ -4,56 +4,56 @@
       "displayName": "Counter: Total Dies Tested (Last 30d)",
       "name": "ds_counter_total_dies_30d",
       "queryLines": [
-        "SELECT total_dies_30d FROM parijat_demos.mfg_ops.gold_counter_total_dies_30d "
+        "SELECT total_dies_30d FROM gold_counter_total_dies_30d "
       ]
     },
     {
       "displayName": "Counter: Avg FPY (Last 14d)",
       "name": "ds_counter_avg_fpy_14d",
       "queryLines": [
-        "SELECT avg_fpy_14d FROM parijat_demos.mfg_ops.gold_counter_avg_fpy_14d "
+        "SELECT avg_fpy_14d FROM gold_counter_avg_fpy_14d "
       ]
     },
     {
       "displayName": "Counter: Avg Retest Rate (Last 14d)",
       "name": "ds_counter_avg_retest_14d",
       "queryLines": [
-        "SELECT avg_retest_rate_14d FROM parijat_demos.mfg_ops.gold_counter_avg_retest_14d "
+        "SELECT avg_retest_rate_14d FROM gold_counter_avg_retest_14d "
       ]
     },
     {
       "displayName": "Daily Test KPIs",
       "name": "ds_test_kpis_daily",
       "queryLines": [
-        "SELECT date, site, product, foundry, dies_tested, dies_pass_fp, dies_fail, fpy, retest_rate, fpy_baseline_21d FROM parijat_demos.mfg_ops.gold_test_kpis_daily ORDER BY date, site, product "
+        "SELECT date, site, product, foundry, dies_tested, dies_pass_fp, dies_fail, fpy, retest_rate, fpy_baseline_21d FROM gold_test_kpis_daily ORDER BY date, site, product "
       ]
     },
     {
       "displayName": "Weekly Failure Bin Mix",
       "name": "ds_bin_mix_weekly",
       "queryLines": [
-        "SELECT week_start, site, product, hard_bin AS hard_bin_code, CASE WHEN hard_bin IN ('HB_014','HB_021','HB_007','HB_032') THEN hard_bin ELSE 'Other' END AS hard_bin_group, die_count FROM parijat_demos.mfg_ops.gold_bin_mix_weekly ORDER BY week_start, site, hard_bin_group "
+        "SELECT week_start, site, product, hard_bin AS hard_bin_code, CASE WHEN hard_bin IN ('HB_014','HB_021','HB_007','HB_032') THEN hard_bin ELSE 'Other' END AS hard_bin_group, die_count FROM gold_bin_mix_weekly ORDER BY week_start, site, hard_bin_group "
       ]
     },
     {
       "displayName": "Parameter Drift Timeseries",
       "name": "ds_param_drift_timeseries",
       "queryLines": [
-        "SELECT date, site, product, param_code, mean_z, pct_limit_breach FROM parijat_demos.mfg_ops.gold_param_drift_timeseries ORDER BY date, site, param_code "
+        "SELECT date, site, product, param_code, mean_z, pct_limit_breach FROM gold_param_drift_timeseries ORDER BY date, site, param_code "
       ]
     },
     {
       "displayName": "Equipment and Recipe Change Log",
       "name": "ds_change_log",
       "queryLines": [
-        "SELECT change_time, date, week_start, site, tester_id, change_type, scope, ecr_id, details FROM parijat_demos.mfg_ops.gold_change_log ORDER BY change_time DESC "
+        "SELECT change_time, date, week_start, site, tester_id, change_type, scope, ecr_id, details FROM gold_change_log ORDER BY change_time DESC "
       ]
     },
     {
       "displayName": "Cumulative Impact (Lost Dies and Cost)",
       "name": "ds_impact_cumulative",
       "queryLines": [
-        "SELECT date, site, cumulative_lost_dies, cumulative_cost_usd FROM parijat_demos.mfg_ops.gold_impact_cumulative ORDER BY date, site "
+        "SELECT date, site, cumulative_lost_dies, cumulative_cost_usd FROM gold_impact_cumulative ORDER BY date, site "
       ]
     },
     {
@@ -64,7 +64,7 @@
         "wafer_yield, pattern_class, likely_cause, fail_rate, edge_fail_rate, spatial_chi2_ratio, reviewed_pattern, ",
         "CASE WHEN pattern_class NOT IN ('None', 'Random') THEN 1 ELSE 0 END AS is_patterned, ",
         "CASE WHEN pattern_class = 'Edge-Ring' THEN 1 ELSE 0 END AS is_edge_ring ",
-        "FROM parijat_demos.mfg_ops.gold_wafer_patterns"
+        "FROM gold_wafer_patterns"
       ]
     },
     {
@@ -73,7 +73,7 @@
       "queryLines": [
         "SELECT wafer_id, lot_id, site, product, tester_id, probe_card_id, sort_date, pattern_class, likely_cause, ",
         "wafer_yield, edge_fail_rate, reviewed_pattern ",
-        "FROM parijat_demos.mfg_ops.gold_wafer_patterns WHERE pattern_class NOT IN ('None', 'Random')"
+        "FROM gold_wafer_patterns WHERE pattern_class NOT IN ('None', 'Random')"
       ]
     },
     {
@@ -81,14 +81,14 @@
       "displayName": "Weekly Wafer Pattern Mix",
       "queryLines": [
         "SELECT week_start, site, product, pattern_class, wafer_count, avg_wafer_yield ",
-        "FROM parijat_demos.mfg_ops.gold_wafer_pattern_weekly WHERE pattern_class <> 'None'"
+        "FROM gold_wafer_pattern_weekly WHERE pattern_class <> 'None'"
       ]
     },
     {
       "name": "ds_wafer_list",
       "displayName": "Wafer List",
       "queryLines": [
-        "SELECT wafer_id FROM parijat_demos.mfg_ops.gold_wafer_patterns ORDER BY wafer_id"
+        "SELECT wafer_id FROM gold_wafer_patterns ORDER BY wafer_id"
       ]
     },
     {
@@ -96,7 +96,7 @@
       "displayName": "Wafer Map Dies",
       "queryLines": [
         "SELECT wafer_id, die_x, die_y, bin_label, radial_zone ",
-        "FROM parijat_demos.mfg_ops.gold_wafer_map_dies WHERE wafer_id = :wafer_id"
+        "FROM gold_wafer_map_dies WHERE wafer_id = :wafer_id"
       ],
       "parameters": [
         {
@@ -121,7 +121,7 @@
       "displayName": "Classifier vs Engineer Review",
       "queryLines": [
         "SELECT reviewed_pattern, predicted_pattern, wafer_count, is_match ",
-        "FROM parijat_demos.mfg_ops.gold_wafer_pattern_eval ORDER BY reviewed_pattern, wafer_count DESC"
+        "FROM gold_wafer_pattern_eval ORDER BY reviewed_pattern, wafer_count DESC"
       ]
     }
   ],

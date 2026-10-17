@@ -68,13 +68,15 @@ def main():
             conn.run(f'ALTER DEFAULT PRIVILEGES IN SCHEMA {schema} GRANT SELECT ON TABLES TO {role}')
             logger.info(f'Granted read on schema {args.schema} to app SP {sp_client_id}')
         else:
-            logger.warning(f'Postgres role for app SP {sp_client_id} not found; attach the Lakebase '
-                           'resource to the app and redeploy it, then rerun this task')
+            # Fail the task: a green run here would leave the app's Wafer Operations tab erroring
+            # with "permission denied" and nothing pointing at the cause.
+            failed.append(f'grant skipped: Postgres role for app SP {sp_client_id} not found; attach the '
+                          'Lakebase resource to the app and redeploy it, then rerun this task')
     finally:
         conn.close()
 
     if failed:
-        raise RuntimeError(f'Synced table refresh failed: {", ".join(failed)}')
+        raise RuntimeError(f'Lakebase refresh failed: {"; ".join(failed)}')
 
 
 if __name__ == '__main__':

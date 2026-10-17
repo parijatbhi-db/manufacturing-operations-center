@@ -1,21 +1,11 @@
 // Wafer Operations (Lakebase) and Data Pipeline (Lakeflow Job) routes.
 
+import { getWorkspaceHost as workspaceHost, sendError } from './common.js';
 import { ensureSchema, getServicePrincipalToken, lakebaseConfigured, missingLakebaseEnv, query } from './lakebase.js';
 
 const SYNCED_SCHEMA = process.env.LAKEBASE_SYNCED_SCHEMA || 'mfg_ops';
 const REFRESH_JOB_ID = process.env.REFRESH_JOB_ID;
 const DISPOSITIONS = ['HOLD', 'REPROBE', 'RELEASE', 'SCRAP'];
-
-function workspaceHost() {
-  let host = process.env.DATABRICKS_HOST || '';
-  if (host && !host.startsWith('http')) host = `https://${host}`;
-  return host;
-}
-
-function sendError(res, err) {
-  console.error('[ops error]', err.status || 500, err.message);
-  res.status(err.status || 500).json({ error: err.message });
-}
 
 // Synced table names come from the bundle (lb_*); schema is a fixed identifier, not user input.
 const patterns = `"${SYNCED_SCHEMA}".lb_wafer_patterns`;

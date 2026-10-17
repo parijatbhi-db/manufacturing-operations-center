@@ -27,24 +27,25 @@ variables:
   app_name:
     description: Databricks App that surfaces the solution
     default: mfg-ops-center
+  supervisor_endpoint:
+    description: Serving endpoint of the Agent Bricks supervisor the app chats with
+    default: mas-40863b57-endpoint
   workspace_path:
     description: Workspace path where bundle files will be synced
     default: /Users/parijat.bhide@databricks.com/semi_stdf
 workspace:
   file_path: ${var.workspace_path}
 sync:
-  include:
-  - agent_bricks_service.py
-  - utils.py
-  - generate_data.py
-  - transformations.sql
-  - wafer_ml.py
-  - wafer_patterns.sql
-  - export_kb_docs.py
-  - refresh_lakebase.py
-  - pipelines/stdf_ingest.sql
-  - redeploy_agents.py
-  - dashboard_test_quality_ops.lvdash.json
+  # ../app is synced so the app resource can deploy it (see resources/app.yml). Everything not
+  # gitignored under both paths is uploaded; node_modules is gitignored.
+  paths:
+  - .
+  - ../app
+  exclude:
+  # A locally generated lockfile pins the internal npm proxy and breaks the Apps build
+  - ../app/package-lock.json
+  - ../app/client/package-lock.json
+  - ../app/client/tsconfig.tsbuildinfo
 targets:
   dev:
     default: true
@@ -208,4 +209,7 @@ resources:
       display_name: Semiconductor Test Quality and Throughput
       file_path: ./dashboard_test_quality_ops.lvdash.json
       warehouse_id: ${resources.sql_warehouses.mfg_ops_wh.id}
+      # Datasets use unqualified table names; these set their default catalog/schema.
+      dataset_catalog: ${var.catalog}
+      dataset_schema: ${resources.schemas.mfg_ops.name}
       embed_credentials: false

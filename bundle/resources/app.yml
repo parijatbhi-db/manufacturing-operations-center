@@ -1,0 +1,38 @@
+# The Manufacturing Operations Center app. Managed by the bundle so its resource bindings
+# (above all the Genie space) always point at the objects this bundle deploys; the supervisor
+# agent's Genie sub-agent is wired to the same ${resources.genie_spaces.stdf_genie.id}.
+# Code is deployed with: databricks bundle run mfg_ops_center
+resources:
+  apps:
+    mfg_ops_center:
+      name: ${var.app_name}
+      description: Manufacturing Operations Center - STDF test quality (dashboard + Genie + MAS)
+      compute_size: MEDIUM
+      source_code_path: ../../app
+      user_api_scopes:
+      - dashboards.genie
+      - serving.serving-endpoints
+      resources:
+      - name: genie-space
+        description: STDF Semiconductor Test Quality Analytics Genie space
+        genie_space:
+          name: ${resources.genie_spaces.stdf_genie.title}
+          space_id: ${resources.genie_spaces.stdf_genie.id}
+          permission: CAN_RUN
+      - name: serving-endpoint
+        description: Manufacturing Operations Supervisor (MAS) agent endpoint
+        serving_endpoint:
+          name: ${var.supervisor_endpoint}
+          permission: CAN_QUERY
+      - name: refresh-job
+        description: STDF pipeline refresh job (Lakeflow)
+        job:
+          id: ${resources.jobs.demo_workflow.id}
+          permission: CAN_MANAGE_RUN
+      - name: lakebase
+        description: 'Lakebase: wafer serving tables + disposition write-back'
+        postgres:
+          branch: ${resources.postgres_projects.mfg_ops_lakebase.name}/branches/production
+          # Database resource name (not the Postgres name ${var.lakebase_database})
+          database: ${resources.postgres_projects.mfg_ops_lakebase.name}/branches/production/databases/databricks-postgres
+          permission: CAN_CONNECT_AND_CREATE
